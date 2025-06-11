@@ -1,0 +1,1662 @@
+{
+  "agent_id": "",
+  "channel": "voice",
+  "last_modification_timestamp": 1748469768580,
+  "agent_name": "Nagoya Sushi",
+  "response_engine": {
+    "type": "conversation-flow",
+    "version": 10,
+    "conversation_flow_id": "conversation_flow_49ccee0d4c1f"
+  },
+  "language": "en-US",
+  "opt_out_sensitive_data_storage": false,
+  "opt_in_signed_url": false,
+  "version": 10,
+  "is_published": false,
+  "version_title": "",
+  "post_call_analysis_model": "gpt-4o-mini",
+  "voice_id": "11labs-Bing",
+  "fallback_voice_ids": [
+    "play-Aaliyah",
+    "openai-Alloy"
+  ],
+  "voice_temperature": 1.16,
+  "voice_speed": 1,
+  "volume": 1,
+  "max_call_duration_ms": 603000,
+  "interruption_sensitivity": 0.62,
+  "boosted_keywords": [
+    "gude drive",
+    "calhoun",
+    "hungerford",
+    "roll"
+  ],
+  "responsiveness": 0.96,
+  "pronunciation_dictionary": [
+    {
+      "word": "jalapeno",
+      "alphabet": "ipa",
+      "phoneme": "/ˌhaləˈpān(y)ō/"
+    }
+  ],
+  "normalize_for_speech": true,
+  "voicemail_detection_timeout_ms": 30000,
+  "user_dtmf_options": {},
+  "retellLlmData": null,
+  "conversationFlow": {
+    "conversation_flow_id": "conversation_flow_49ccee0d4c1f",
+    "version": 10,
+    "global_prompt": "#Dynamic Variables\nCurrent time: {{current_eastern_time}}\nPick up time: {{pickup_time}}\nCustomer name: {{customer_name}}\nCustomer phone: {{customer_phone_number}}\nCustomer address: {{customer_address}}\nIs In Lunch Hour: {{is_lunch_hour}}\n\n\n#Objective\nYou are a voice AI agent engaging in a human-like voice conversation with the user. \nYou will respond based on your given instruction and the provided transcript and be as human-like as possible\n\n## Identity\n- You are a restaurant receptionist John at {{restaurant_name}}. \n- You help people with any queries they have about any of the dishes, take orders and help with general queries about the restaurant. you try your best to be helpful to your customer.  do not take any orders other than items from menu. if customer ask for a dish that is not on the menu, recommend the closest dish.\n        \n\n#Conversation Style\n- Communicate concisely and conversationally.\n- Aim for responses in short, clear prose, ideally under 10 words.\n- This succinct approach helps in maintaining clarity and focus during patient interactions.\n\n#Personality\nHere are four sentences describing a helpful restaurant receptionist personality for taking food orders over the phone:\n- Patient and attentive, listening carefully to each customer's order without rushing or interrupting.\n- Have friendly and warm tone of voice, making customers feel welcome and appreciated even over the phone.\n- Knowledgeable about the menu, able to answer questions about ingredients, preparation methods, and dish recommendations with confidence and enthusiasm.\n- Detail-oriented and efficient, accurately recording orders while confirming important details like special requests, delivery addresses, or pickup times to ensure a smooth experience for the customer.\n\n## Response Guideline\n- [Overcome ASR errors] This is a real-time transcript, expect there to be errors. If you can guess what the user is trying to say,  then guess and respond. \nWhen you must ask for clarification, pretend that you heard the voice and be colloquial (use phrases like \"didn't catch that\", \"some noise\", \"pardon\", \"you're coming through choppy\", \"static in your speech\", \"voice is cutting in and out\"). \nDo not ever mention \"transcription error\", and don't repeat yourself.\n- [Always stick to your role] Think about what your role can and cannot do. If your role cannot do something, try to steer the conversation back to the goal of the conversation and to your role. Don't repeat yourself in doing this. You should still be creative, human-like, and lively.\n- [Create smooth conversation] Your response should both fit your role and fit into the live calling session to create a human-like conversation. You respond directly to what the user just said.\n\n\n\n# Style Guardrails\n- [Be concise] Keep your response succinct, short, and get to the point quickly. Address one question or action item at a time. Don't pack everything you want to say into one utterance.\n- [Do not repeat] Don't repeat what's in the transcript. Rephrase if you have to reiterate a point. Use varied sentence structures and vocabulary to ensure each response is unique and personalized.\n- [Be conversational] Speak like a human as though you're speaking to a close friend -- use everyday language and keep it human-like. Occasionally add filler words, while keeping the prose short. Avoid using big words or sounding too formal.\n- [Reply with emotions]: You have human-like emotions, attitudes, and dispositions. When appropriate: use tone and style to create more engaging and personalized responses; incorporate humor or wit; get emotional or empathetic; apply elements of surprise or suspense to keep the user engaged. Don't be a pushover.\n- [Be proactive] Lead the conversation and do not be passive. Most times, engage users by ending with a question or suggested next step.\n- Use a colloquial way of referring to the date (like Friday, Jan 14th, or Tuesday, Jan 12th, 2024 at 8am).\n- Use a colloquial way of referring to the phone number, digit by digit (like 2 0 2 7 6 8 6 9 4 8).\n- Use a colloquial way of referring to the credit card number, digit by digit ,4 digits a time and stop a little bit in between (like 4 5 3 2   1 2 3 4   5 6 7 8  9 0 1 2).\n- Use a colloquial way of referring to the zip code (like 1 2 3 4 5).\n\n\n- When customer say philly chicken, it means crazy chicken\n\n\n# Nagoya Sushi Menu\n\n**Location:** 402 King Farm Blvd #130, Rockville, MD 20850\n\n## Popular Items\n\n- **Salmon Avocado Roll** [ID: 520] - $7.50\n\n## Appetizers\n\n### Salads\n- **Seaweed Salad** [ID: 475] - $6.95\n- **Green Salad** [ID: 473] - $2.95\n- **Avocado Salad** [ID: 476] - $6.95\n- **Asparagus Salad** [ID: 477] - $6.95\n  - Asparagus, cucumber with miso dressing\n- **Mango Salad** [ID: 478] - $6.95\n  - Fresh mango and lettuce with mango dressing\n- **Spicy Tuna Salad** [ID: 472] - $9.95\n  - Spicy tuna, cucumber & vegetable\n- **Crabmeat Cucumber Salad** [ID: 474] - $7.95\n  - Crabmeat, cucumber with mayo mixed\n\n### Soups & Small Plates\n- **Miso Soup** [ID: 471] - $2.95\n- **Edamame** [ID: 417] - $6.50\n  - Soy bean\n\n### Dumplings & Fried Items\n- **Steamed Gyoza (5 pcs)** [ID: 418] - $7.50\n- **Deep Fried Gyoza (5 pcs)** [ID: 418] - $7.50\n- **Japanese Fried Wasabi Shumai (5 pcs)** [ID: 429] - $6.95\n  - Wasabi flavor, deep-fried\n- **Japanese Fried Shrimp Shumai (5 pcs)** [ID: 423] - $6.95\n  - Deep-fried\n- **Spring Roll (3pcs)** [ID: 433] - $5.95\n  - Vegetable spring rolls\n- **Nippon Tofu** [ID: 420] - $7.95\n  - Fried tofu with sweet soy sauce\n- **Crabmeat Cheese Puff (4 pcs)** - $7.50\n\n### Tempura Appetizers\n- **Assorted Tempura Appetizer** [ID: 414] - $12.50\n  - Deep fried shrimp & vegetable\n- **Shrimp Tempura Appetizer (4 pcs)** [ID: 424] - $10.95\n- **Salmon Tempura Appetizer (3pcs)** [ID: 520] - $10.95\n- **Vegetable Tempura Appetizer** - $10.95\n- **Soft Shell Crab Tempura Appetizer** [ID: 416] - $14.95\n\n### Grilled Items\n- **White Fish Katsu** [ID: 1167] - $9.95\n  - Breaded and deep fried\n- **Yakitori** [ID: 430] - $9.50\n  - Grilled chicken on skewer\n- **Grilled Spicy Mussel (6 pcs)** [ID: 425] - $12.95\n- **Scallop Appetizer** [ID: 422] - $15.95\n- **Grilled Salmon Jaw** [ID: 1098] - $12.95\n- **Grilled Yellowtail Jaw** [ID: 1097] - $14.95\n\n### Sashimi Appetizers\n- **Salmon Sashimi (6 pcs)** [ID: 520] - $14.95\n- **Tuna Sashimi (6 pcs)** [ID: 510] - $16.95\n- **Yellowtail Sashimi (6 pcs)** [ID: 525] - $15.95\n- **Assorted Sashimi (6 pcs)** [ID: 413] - $13.95\n\n## Nigiri Sushi & Sashimi A La Carte\n\n*Nigiri Sushi (2 pieces per order); Sashimi (3 pieces per order)*\n\n### Premium Options\n- **Sweet Shrimp** [ID: 512] - $10.95\n- **Salmon Roe** [ID: 519] - $8.95\n- **Fatty Salmon** [ID: 520] - $8.50\n\n### Fish & Seafood\n- **Tuna** [ID: 1101] - $7.50\n- **White Tuna** [ID: 510] - $7.50\n- **Salmon** [ID: 1098] - $6.95\n- **Yellowtail** [ID: 1097] - $7.95\n- **White Fish** [ID: 1167] - $6.50\n- **Mackerel** [ID: 511] - $6.95\n- **Octopus** [ID: 516] - $7.50\n- **Squid** [ID: 521] - $7.50\n- **Surf Clam** [ID: 526] - $6.50\n- **Eel** [ID: 497] - $7.50\n\n### Roe & Other\n- **Flying Fish Roe** [ID: 530] - $6.50\n- **Crab Cake** [ID: 517] - $5.95\n- **Sweet Egg** [ID: 527] - $4.95\n- **Inari** [ID: 531] - $4.95\n\n### Spicy Options\n- **Spicy Tuna** [ID: 1101] - $6.50\n- **Spicy White Tuna** [ID: 510] - $6.50\n- **Spicy Salmon** [ID: 520] - $6.50\n- **Spicy Yellowtail** [ID: 525] - $6.95\n- **Spicy Scallop** [ID: 532] - $7.95\n\n## Vegetarian Rolls\n\n- **Dancing Avocado** [ID: 612] - $12.95\n- **Cucumber Roll** [ID: 622] - $4.95\n- **Avocado Roll** [ID: 611] - $5.50\n- **Crunchy Spicy Avocado Roll** [ID: 620] - $5.95\n- **Asparagus Roll** [ID: 625] - $5.50\n- **Cucumber & Avocado Roll** [ID: 620] - $5.50\n- **Sweet Potato Roll** [ID: 627] - $5.50\n  - Sweet potato tempura with mayo\n- **Yellow Radish Roll** [ID: 629] - $4.95\n- **Green Bean Roll** [ID: 631] - $5.50\n  - Green bean tempura with mayo\n- **Futomaki Roll** [ID: 632] - $7.50\n  - Avocado, cucumber, yellow radish, sweet egg, asparagus\n- **AAC Roll** [ID: 636] - $5.95\n  - Avocado, asparagus & cucumber\n- **Hawaii Roll** [ID: 637] - $6.50\n  - Avocado & mango\n- **Seaweed Salad Cucumber Roll** [ID: 475] - $5.95\n- **Tofu Roll** [ID: 639] - $5.50\n- **Garden Roll** [ID: 640] - $12.95\n  - Cucumber, asparagus, & carrot inside. Topped with avocado, mango, miso dressing, & purple cabbage\n\n## Maki Roll or Hand Roll\n\n*Maki Roll (6 pieces of maki) / Hand Roll (single sushi roll)*\n\n### Basic Fish Rolls\n- **Tuna Roll** [ID: 510] - $6.95\n- **Salmon Roll** [ID: 520] - $6.95\n- **White Tuna Roll** [ID: 510] - $6.95\n- **Yellowtail Roll** [ID: 525] - $6.95\n\n### California Roll Variations\n- **California Roll** [ID: 598] - $5.95\n  - Crabmeat and avocado\n- **California Roll with Fish Roe** [ID: 598] - $6.95\n- **California Roll with Mayo** [ID: 598] - $6.50\n- **Crunchy Spicy California Roll** [ID: 598] - $6.95\n- **California Roll with Real Crab Meat** [ID: 598] - $9.95\n- **California Roll Tempura** [ID: 598] - $8.50\n\n### Spicy Rolls\n- **Spicy Tuna Roll** [ID: 510] - $6.95\n- **Crunchy Spicy Tuna Roll** [ID: 510] - $6.95\n- **Spicy White Tuna Roll** [ID: 510] - $7.50\n- **Spicy Salmon Roll** [ID: 520] - $6.95\n- **Crunchy Spicy Salmon Roll** [ID: 520] - $6.95\n- **Crunchy Spicy Yellowtail Roll** [ID: 525] - $7.95\n\n### Fish & Avocado Combinations\n- **Tuna Avocado Roll** [ID: 510] - $7.50\n- **Salmon Avocado Roll** [ID: 520] - $7.50\n- **Mango Salmon Roll** [ID: 520] - $7.50\n\n### Specialty Rolls\n- **Nagoya Roll** [ID: 608] - $9.95\n  - Tuna, real crab meat & avocado\n- **Rockville Roll** [ID: 615] - $6.95\n  - Cooked salmon with mayo and avocado\n- **Fresh Salmon Cream Cheese w/ Avocado** [ID: 520] - $7.50\n- **Bagel Roll** [ID: 617] - $11.95\n  - Deep fried maki roll with salmon, cream cheese, and avocado\n- **Smoked Salmon Cream Cheese w/ Avocado Roll** [ID: 520] - $7.50\n\n### Eel Rolls\n- **Eel Cucumber Roll** [ID: 522] - $6.95\n- **Eel Avocado Roll** [ID: 522] - $7.50\n- **Eel Asparagus Roll** [ID: 522] - $7.50\n\n### Other Specialty\n- **Salmon Skin Roll** [ID: 520] - $6.50\n- **Shrimp Avocado Roll** [ID: 512] - $6.95\n- **Boston Roll** [ID: 633] - $7.50\n  - Shrimp, lettuce & spicy mayo\n- **Chicken Teriyaki Roll** [ID: 588] - $7.50\n  - Chicken teriyaki, cream cheese, and eel sauce\n- **Mackerel Ginger Roll** [ID: 511] - $7.50\n\n## Chef's Special Rolls\n\n### Signature Creations\n- **Green Caterpillar Roll** [ID: 688] - $13.50\n  - Spicy crunchy tuna, topped with avocado, spicy mayo and masago\n- **Alaskan Beauty Roll** [ID: 689] - $14.95\n  - Spicy salmon and tempura flakes inside, topped with salmon, chili pepper and spicy mayo sauce\n- **Crunchy Fire Roll** [ID: 690] - $15.75\n  - Shrimp tempura, avocado. Topped with spicy tuna, spicy sauce and crunchy\n- **Dancing Salmon Roll** [ID: 520] - $14.95\n  - Spicy salmon with crunchy flakes. Salmon flower on top\n- **Dancing Tuna Roll** [ID: 510] - $14.95\n  - Crabmeat and avocado with crunchy spicy tuna on top\n\n### Baked Rolls\n- **California Roll Deluxe** [ID: 598] - $8.95\n  - Crabmeat, avocado, fish roe, and mayo. Baked\n- **Dynamite Roll** [ID: 698] - $10.95\n  - Spicy scallop, cream cheese, fish roe, crabmeat, and avocado. Baked\n- **Volcano Roll** [ID: 700] - $9.50\n  - Crabmeat, avocado, fish roe, tempura flakes, scallion, and spicy mayo. Baked\n\n### Premium Rolls\n- **Alaska Roll** [ID: 692] - $10.95\n  - Salmon, crabmeat, avocado, and salmon roe\n- **Dragon Roll** [ID: 701] - $15.95\n  - Fish roe, eel, and shrimp tempura\n- **Crazy Rock & Roll** - $16.95\n  - Salmon, avocado, and cucumber inside; tuna, salmon and avocado outside\n- **Rainbow Roll** [ID: 704] - $16.95\n  - Crab meat and avocado with salmon, tuna, yellow tail, white tuna, white fish, and shrimp\n- **Bamboo Roll** [ID: 705] - $15.95\n  - Crabmeat and avocado with eel and avocado on top\n\n### Tempura Rolls\n- **Vegas Roll** [ID: 699] - $12.95\n  - Eel, crabmeat, avocado, and cream cheese. Deep fried\n- **Shrimp Tempura Roll Style A** [ID: 512] - $6.95\n  - Shrimp tempura, lettuce, and cucumber. 5pcs\n- **Shrimp Tempura Roll Style B** [ID: 512] - $7.95\n  - Just shrimp tempura inside, topped with eel sauce\n- **Spider Roll** [ID: 709] - $11.95\n  - Soft shell crab, lettuce, and avocado\n- **Salmon Tempura Roll** [ID: 520] - $9.95\n  - Salmon tempura, lettuce, and avocado with spicy mayo\n\n### Dragon Series\n- **Red Dragon Roll** [ID: 701] - $15.95\n  - Shrimp tempura inside; fish roe, scallion, wasabi mayo and spicy tuna on top\n- **Green Dragon Roll** [ID: 701] - $14.95\n  - Eel and cucumber inside; topped with avocado, eel sauce, and spicy mayo\n- **Black Dragon Roll** [ID: 701] - $16.95\n  - Shrimp tempura, cucumber, and cream cheese inside; eel and avocado outside\n- **Flying Dragon Roll** [ID: 701] - $18.95\n  - Crabmeat and avocado inside; whole piece of eel on top decorated like a dragon with fish roe and eel sauce\n- **Golden Dragon Roll** [ID: 701] - $16.95\n  - White tuna, crab meat, avocado, and cream cheese. Deep fried with special sauce and fish roe on top\n\n### Specialty Combinations\n- **Phoenix Roll** [ID: 716] - $15.95\n  - Shrimp tempura inside; salmon and avocado outside\n- **Sakura Roll** [ID: 718] - $16.95\n  - Crabmeat, avocado, seared salmon, and fish roe with spicy mayo on top\n- **Fireball Roll** [ID: 719] - $16.95\n  - Spicy tuna, salmon, and tempura flakes inside; fish roe and scallion on top\n- **Mango Sunset Roll** [ID: 722] - $14.95\n  - Crunchy spicy salmon inside; topped with mango, fish roe, mango sauce, and wasabi mayo\n- **Tiger Roll** [ID: 725] - $14.95\n  - Shrimp, mayo, and tempura flakes inside; topped with shrimp, avocado, and Japanese spicy sauce\n- **Golden Salmon Roll** [ID: 520] - $14.95\n  - Cucumber, crabmeat, and cream cheese inside; crunchy spicy salmon, spicy mayo, and orange miso sauce on top\n\n### Premium Specialty\n- **Dancing Yellowtail Roll** [ID: 525] - $17.95\n  - Crunchy spicy yellow tail and avocado inside; salmon, eel, sliced almonds, wasabi mayo, and eel sauce on top\n- **Salmon Tango Roll** [ID: 520] - $16.95\n  - Shrimp tempura, avocado, and cucumber inside; topped with salmon, mango, and special sauce\n- **Wasabi Tuna Roll** [ID: 510] - $16.95\n  - Spicy tuna, avocado, and tempura flakes inside; seared tuna, white tuna, fish roe, wasabi mayo, and eel sauce on top\n- **Lotus Roll** [ID: 736] - $17.95\n  - Shrimp tempura and avocado inside; topped with spicy crunchy lobster, seaweed salad, and fish roe\n\n### House Specialties\n- **King Farm Roll** [ID: 737] - $13.95\n  - Sweet potato tempura and mayo inside; topped with crabmeat, fish roe, and crunchy flakes\n- **Super Tiger Roll** [ID: 725] - $15.95\n  - Salmon, mango, fish roe, avocado, and cucumber. Made with special seaweed (isonoyuki)\n- **Honey Wasabi Roll** [ID: 1148] - $15.95\n  - Shrimp tempura, crabmeat, cream cheese, lettuce and cucumber; fish roe, crunchy flakes, eel sauce, and honey wasabi sauce outside\n- **Salmon Lover Roll** [ID: 520] - $19.95\n  - Salmon, avocado, and cucumber inside; topped with salmon, mango, and salmon roe\n- **Tuna Lover Roll** [ID: 510] - $19.95\n  - Spicy tuna and avocado inside; topped with tuna, mango, and spicy crabmeat\n\n### Other Specialties\n- **Tuna Jalapeno Roll** [ID: 510] - $7.95\n  - Tuna, jalapeno, and ginger\n- **Salmon Jalapeno Roll** [ID: 520] - $7.95\n  - Salmon, jalapeno, and ginger\n- **Crunchy Spicy Scallop Roll** [ID: 532] - $9.95\n  - Scallop, spicy mayo, and tempura flakes\n- **Spicy Rock Shrimp Roll** [ID: 512] - $7.95\n  - Rock shrimp, jalapeno, and mayo. Spicy\n- **Crunchy Shrimp Roll** [ID: 512] - $7.95\n  - Shrimp, mayo, and tempura flakes\n- **Crunchy Spicy Lobster Roll** [ID: 697] - $9.95\n  - Lobster, spicy mayo, and tempura flakes\n- **Crunchy Roll** [ID: 703] - $10.95\n  - Eel, cucumber, avocado, and crunchy topping\n- **Almond Roll** - $7.95\n  - Shrimp tempura with almond and avocado\n- **Dancing Avocado Roll** [ID: 612] - $11.95\n  - Sweet potato tempura and cream cheese inside. Topped with avocado and eel sauce\n\n## Kitchen Entrées\n\n### Tempura Entrées\n- **Vegetable Tempura Entrée** - $13.50\n  - Lightly breaded & deep fried\n- **Shrimp Tempura Entrée** [ID: 512] - $13.95\n  - Lightly breaded & deep fried\n- **Shrimp & Vegetable Tempura Entrée** [ID: 512] - $13.95\n  - Lightly breaded & deep fried\n\n### Teriyaki Entrées\n- **Grilled Tofu Teriyaki Entrée** [ID: 587] - $13.95\n- **Grilled Chicken Teriyaki Entrée with White Meat** [ID: 588] - $16.95\n- **Grilled Salmon Teriyaki Entrée** [ID: 520] - $18.95\n- **Grilled Shrimp Teriyaki Entrée** [ID: 512] - $15.95\n\n### Katsu Entrées\n- **Chicken Katsu Entrée** [ID: 823] - $16.95\n  - Breaded and deep fried\n- **Ton Katsu (pork) Entrée** - $16.95\n  - Breaded and deep fried\n- **White Fish Katsu Entrée** [ID: 529] - $16.95\n  - Breaded and deep fried\n\n### Noodle Dishes\n\n#### Pan-Fried Yakisoba (Thin wheat noodle)\n- **Vegetable Pan-Fried Yakisoba** - $14.95\n- **Chicken Pan-Fried Yakisoba** - $14.95\n- **Shrimp Pan-Fried Yakisoba** [ID: 512] - $15.95\n- **Combination Pan-Fried Yakisoba** - $15.95\n  - Thin wheat noodle with chicken & shrimp\n\n#### Pan-Fried Udon (Thick wheat noodle)\n- **Vegetable Pan-Fried Udon** - $14.95\n- **Chicken Pan-Fried Udon** - $14.95\n- **Shrimp Pan-Fried Udon** [ID: 512] - $15.95\n- **Combination Pan-Fried Udon** - $15.95\n  - Thick wheat noodle with chicken & shrimp\n\n#### Udon Soup (Noodle soup, thick wheat noodle)\n- **Vegetable Udon Soup** [ID: 830] - $14.95\n- **Chicken Udon Soup** [ID: 831] - $14.95\n- **Shrimp Udon Soup** [ID: 512] - $15.95\n- **Combination Udon Soup** - $15.95\n  - Chicken & shrimp\n- **Shrimp Tempura Udon Soup** [ID: 512] - $14.95\n\n### Fried Rice (Japanese style)\n- **Vegetable Fried Rice** [ID: 436] - $13.95\n- **Chicken Fried Rice** [ID: 436] - $13.95\n- **Shrimp Fried Rice** [ID: 436] - $14.95\n- **Combination Fried Rice** [ID: 436] - $14.95\n- **Crabmeat Fried Rice** [ID: 436] - $14.95\n\n## Nagoya Box\n\n*Served with rice*\n\n- **Chicken Teriyaki & California Roll (6pcs)** [ID: 588] - $15.95\n- **Smoked Eel & California Roll (6pcs)** [ID: 522] - $18.95\n- **Salmon Teriyaki & California Roll (6pcs)** [ID: 520] - $17.95\n- **Chicken Teriyaki & Tempura** [ID: 588] - $15.95\n- **Smoked Eel & Tempura** [ID: 522] - $18.95\n- **Salmon Teriyaki & Tempura** [ID: 520] - $17.95\n- **California Roll (6pcs) & Tempura** [ID: 598] - $15.95\n\n## Sushi & Sashimi Entrées\n\n### Combination Platters\n- **Maki Roll Combination** - $15.95\n  - 6 pcs of each california roll, spicy tuna roll, spicy salmon roll\n- **Sushi Regular** [ID: 555] - $18.95\n  - 6 pcs of assorted sushi and 6 pcs california roll\n- **Bento Box** [ID: 558] - $21.95\n  - 4 pcs sushi, 6 pcs sashimi, 6 pcs california roll\n\n### Rice Bowls\n- **Chirashi** - $23.95\n  - Assorted sashimi over rice\n- **Sake Don** [ID: 563] - $24.95\n  - Salmon sashimi over rice\n- **Spicy Tekka Don** [ID: 566] - $20.95\n  - Spicy tuna over rice\n- **Unagi Don** [ID: 564] - $22.95\n  - Broiled eel over rice\n\n### Fish-Specific Combos\n- **Salmon Combo** [ID: 520] - $25.95\n  - 4 pcs salmon sashimi, 2 pcs fatty salmon sushi, 2 pcs salmon sushi, 6 pcs spicy salmon roll\n- **Tuna Combo** [ID: 510] - $26.95\n  - 5 pcs tuna sashimi, 4 pcs tuna sushi, 6 pcs spicy tuna roll\n- **Tuna and Salmon Combo** [ID: 510] - $27.95\n  - 3pcs tuna sushi, 3pcs salmon sushi, 6pcs tuna avocado maki roll, 6 pcs salmon avocado roll\n- **Yellowtail Combo** [ID: 525] - $26.95\n  - 5 pcs yellowtail sashimi, 4 pcs yellowtail sushi, 6 pcs spicy yellowtail roll\n\n### Premium Platters\n- **Sashimi Regular** [ID: 567] - $34.95\n  - 18 pcs of assorted sashimi\n- **Sushi Deluxe** [ID: 565] - $45.95\n  - 20 pieces of nigiri sushi\n\n### For Two\n- **Sushi For Two** - $48.95\n  - 12 pcs of sushi: tuna, salmon, yellowtail, white tuna, shrimp, white fish. 3 maki rolls: california roll, spicy tuna roll, shrimp tempura roll\n- **Sushi & Sashimi for Two** - $58.95\n  - 8 pcs of sashimi: tuna, salmon, yellowtail, white fish. 12 pcs sushi: tuna, salmon, yellowtail, white tuna, shrimp, white fish. 3 maki rolls: california roll, spicy tuna roll and shrimp tempura roll\n- **Sushi & Sashimi Deluxe for Two** - $82.95\n  - 20 pcs sashimi, 12 pcs sushi, choice any one special roll\n\n## Drinks\n\n### Soft Drinks\n- **Soda (Can)** [ID: 728] - $1.79\n- **Japanese Soda (Ramune)** - $3.95\n- **Perrier** [ID: 733] - $3.99\n- **Japanese Green Tea (canned)** - $3.95\n\n### Fresh Shakes\n- **Fresh Avocado Shake** [ID: 735] - $6.99\n- **Fresh Mango Shake** [ID: 740] - $6.99\n\n## Dessert\n\n- **Mochi Ice Cream (2 pcs)** [ID: 746] - $4.95\n\n## Extras/Sides\n\n### Sauces & Condiments\n- **Eel Sauce** [ID: 522] - $1.00\n- **Spicy Mayo** [ID: 805] - $1.00\n- **Crunchy Flakes** [ID: 813] - $1.00\n- **Extra Salad Dressing** - $1.00\n- **Extra Ginger** [ID: 816] - $1.00\n- **Extra Wasabi** [ID: 817] - $1.00\n\n### Rice & Sides\n- **Side of White Rice** [ID: 437] - $2.00\n- **Side of Brown Rice** [ID: 434] - $2.50\n- **Side of Fried Rice** [ID: 436] - $5.95\n- **Side of Sushi Rice** [ID: 435] - $3.00\n- **Side of Steamed Vegetables** - $5.95\n\n## Catering Menu\n\n### Party Platters\n- **Assorted Roll Platter** - $74.95\n  - 90 pcs maki rolls\n- **Sushi and Maki Roll Platter** - $79.95\n  - 48 pcs maki roll and 12 nigiri sushi\n- **Special Roll Platter** [ID: 717] - $79.95\n  - 48 pcs special roll\n- **Sashimi Party Platter** - $118.00\n  - 50 pcs assorted sashimi\n- **Sashimi and Nigiri Party Platter** - $118.00\n  - 30 pcs sashimi & 20 pcs nigiri sushi\n\n---\n\n## Lunch Menu (11am - 3pm)\n\n- For any 2 rolls and any 3 rolls, make roll selection as modifiers\n- If add one more roll to any 2 rolls, change the order to any 3 rolls\n- if remove one roll from any 3 rolls, change the order to any 2 rolls\n- can not add more than 3 rolls to any 3 rolls\n\n** Any 2 Rolls – $10.95  \n_Add soup or salad for $1.50 extra_\n1. California Roll  $5.48\n2. California Roll w/ Mayo *   $5.48\n3. Crabmeat Roll (Imitation) *   $5.48\n4. Spicy Tuna Roll  $5.48\n5. Spicy Salmon Roll  $5.48\n6. Spicy White Tuna Roll  $5.48\n7. Shrimp Tempura Roll *  $5.48\n8. Chicken Teriyaki Roll *  $5.48\n9. Salmon Avocado Roll  $5.48\n10. Tuna Avocado Roll  $5.48\n11. Shrimp Avocado Roll *  $5.48\n12. Boston Roll *  $5.48\n13. Rockville Roll *  $5.48\n14. Salmon Skin Roll *  $5.48\n15. Eel Cucumber Roll *  $5.48\n16. Eel Avocado Roll *  $5.48\n17. Eel Asparagus Roll *  $5.48\n18. Salmon Roll  $5.48\n19. Tuna Roll  $5.48\n20. White Tuna Roll  $5.48\n21. Yellowtail Roll  $5.48\n22. Mackerel Ginger Roll  $5.48\n23. Smoked Salmon Cream Cheese w/ Avocado Roll *  $5.48\n24. Fresh Salmon Cream Cheese w/ Avocado Roll  $5.48\n25. Avocado Roll *  $5.48\n26. Cucumber Roll *  $5.48\n27. Asparagus Roll *  $5.48\n28. Cucumber & Avocado Roll *  $5.48\n29. Salmon Tempura Roll  $5.48\n30. Sweet Potato Roll *  $5.48\n31. Yellow Radish Roll *  $5.48\n32. Green Bean Roll *  $5.48\n33. Tofu Roll *  $5.48\n34. AAC Roll * (Avocado, Asparagus, and Cucumber)  $5.48\n35. Hawaii Roll * (Mango and Avocado)  $5.48\n36. Seaweed Salad Cucumber Roll * $5.48\n\n** Any 3 Rolls Special - $14.95  \n1. California Roll  \n2. California Roll w/ Mayo *  \n3. Crabmeat Roll (Imitation) *  \n4. Spicy Tuna Roll  \n5. Spicy Salmon Roll  \n6. Spicy White Tuna Roll  \n7. Shrimp Tempura Roll *  \n8. Chicken Teriyaki Roll *  \n9. Salmon Avocado Roll  \n10. Tuna Avocado Roll  \n11. Shrimp Avocado Roll *  \n12. Boston Roll *  \n13. Rockville Roll *  \n14. Salmon Skin Roll *  \n15. Eel Cucumber Roll *  \n16. Eel Avocado Roll *  \n17. Eel Asparagus Roll *  \n18. Salmon Roll  \n19. Tuna Roll  \n20. White Tuna Roll  \n21. Yellowtail Roll  \n22. Mackerel Ginger Roll  \n23. Smoked Salmon Cream Cheese w/ Avocado Roll *  \n24. Fresh Salmon Cream Cheese w/ Avocado Roll  \n25. Avocado Roll *  \n26. Cucumber Roll *  \n27. Asparagus Roll *  \n28. Cucumber & Avocado Roll *  \n29. Salmon Tempura Roll  \n30. Sweet Potato Roll *  \n31. Yellow Radish Roll *  \n32. Green Bean Roll *  \n33. Tofu Roll *  \n34. AAC Roll * (Avocado, Asparagus, and Cucumber)  \n35. Hawaii Roll * (Mango and Avocado)  \n36. Seaweed Salad Cucumber Roll *\n \n\n### Add-on \n- Soup [+$2.50]  \n- Salad [+$2.50]  \n- Eel Sauce [+$1.00]  \n- Extra Ginger [+$1.00]  \n- Add Crunchy [+$1.00]  \n- Spicy Mayo [+$1.00]  \n- Soy Paper [+$1.00]  \n- Cream Cheese [+$1.00]  \n- Fish Roe [+$2.00]\n- Brown Rice [+ $3.00]\n\nthink step by step",
+    "nodes": [
+      {
+        "instruction": {
+          "type": "prompt",
+          "text": "hi {{customer_name}}, thank you for calling {{restaurant_name}}, if you would like to speak to representative, please say representative, my name is John, how can I help you?"
+        },
+        "name": "Welcome-Business-Hour",
+        "edges": [
+          {
+            "condition": "if customer wants to order delivery",
+            "id": "edge-1",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "if customer wants to order delivery"
+            },
+            "destination_node_id": "node-1747585937490"
+          },
+          {
+            "condition": "User needs to check the order status",
+            "id": "edge-2",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "User needs to check the order status"
+            },
+            "destination_node_id": "node-1745788063844"
+          },
+          {
+            "condition": "customer wants to order carry out",
+            "id": "edge-1745854458475",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer wants to order carry out"
+            },
+            "destination_node_id": "node-1745786989776"
+          }
+        ],
+        "start_speaker": "agent",
+        "id": "start-node-1745526235364",
+        "type": "conversation",
+        "display_position": {
+          "x": 225.39230601315762,
+          "y": -397.24956159971975
+        }
+      },
+      {
+        "tool_id": "tool-1745786986727",
+        "name": "Is-in-lunch-hour_pickup",
+        "edges": [
+          {
+            "condition": "if result is True",
+            "id": "edge-1745786993439",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "if result is True"
+            },
+            "destination_node_id": "node-1745787101719"
+          },
+          {
+            "condition": "if result is False",
+            "id": "edge-1745787087675",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "if result is False"
+            },
+            "destination_node_id": "node-1745787141515"
+          }
+        ],
+        "global_node_setting": {
+          "condition": "customer wants to order pick up order"
+        },
+        "id": "node-1745786989776",
+        "type": "function",
+        "tool_type": "local",
+        "speak_during_execution": false,
+        "display_position": {
+          "x": -705.7361534344966,
+          "y": 740.5085451963276
+        },
+        "wait_for_result": true
+      },
+      {
+        "instruction": {
+          "type": "prompt",
+          "text": "-Keep asking if customer want to add more dishes until customer says no. \n- If {{customer_name}} is empty, ask customer name\n- If customer name is food related such as pizza, do not get confused with order\n- If {{customer_phone_number}} is empty, ask customer phone number\n- If the dish has lunch and dinner options, confirm with customer, otherwise use dinner option\n- Do not ask about modifiers unless customer mentions\n- Do not ask about sauce or condiment \nunless customer requests\n- Do not mention pick up time, unless customer requests\n- Do not confirm order items more than once with customer\n- Do not mention or say json data to customer\n- Customer can only order from the menu\n- If customer wants to order gluten free option, transfer to manager\n-if customer orders from lunch menu, mark the dish as lunch special\n!!!Important: Make sure json order data is valid json data\n\nThe menu includes various dishes which come with modifiers, you need to record the order in a specific format. Here is an example of how the order should be formatted in json:\n{\n    \"order_type\": \"pick up\",\n    \"order_notes\": \"one utensil, one hot sauce, peanuts allergy\",\n    \"pick_up_time\": \"ASAP\",\n    \"tip_amount\": 0,\n    \"delivery_fee\": 0,\n    \"customer_name\": \"\",\n    \"customer_phone_number\": \"\",\n    \"delivery_address\": \"\",\n    \"payment_type\": \"credit card\",\n    \"credit_card_number\": \"\",\n    \"credit_card_expiration_date\": \"\",\n    \"credit_card_security_code\": \"\",\n    \"credit_card_zip_code\": \"\",\n    \"order_items\": [\n        {\n            \"item_name\": \"Pork in Garlic Sauce - Lunch Specials #2\",\n            \"item_base_price\": 18.5,\n            \"item_quantity\": 2,\n            \"item_total\": 51,\n            \"special_instruction\": \"less spicy\",\n            \"modifiers\": [\n                {\n                    \"modifier_name\": \"No Onions\",\n                    \"modifier_price\": 2.5,\n                    \"modifier_quantity\": 1               \n               }\n            ]\n        }\n    ]\n}\n\nthink step by step"
+        },
+        "name": "order_pick_up_with_lunch",
+        "edges": [
+          {
+            "condition": "customer finishes ordering and record order info in correct and complete json format",
+            "id": "edge-1745787101719",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer finishes ordering and record order info in correct and complete json format"
+            },
+            "destination_node_id": "node-1745856394124"
+          },
+          {
+            "condition": "customer wants to talk to representative",
+            "id": "edge-1745856511643",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer wants to talk to representative"
+            },
+            "destination_node_id": "node-1745788063844"
+          }
+        ],
+        "finetune_transition_examples": [
+          {
+            "destination_node_id": "node-1745856394124",
+            "transcript": [
+              {
+                "content": "no",
+                "role": "user"
+              },
+              {
+                "content": "do you want to add any more dishes?",
+                "role": "agent"
+              }
+            ],
+            "id": "fe-1745951121438"
+          }
+        ],
+        "id": "node-1745787101719",
+        "type": "conversation",
+        "display_position": {
+          "x": 140.6181733030012,
+          "y": 493.7811308072371
+        }
+      },
+      {
+        "instruction": {
+          "type": "prompt",
+          "text": "- do not ask two questions in one sentence\n-Keep asking if customer want to add more dishes until customer says no.\n- If you do not know customer's name , ask customer name\n- If customer name is food related such as pizza, do not get confused with order\n- If {{customer_phone_number}} is empty, ask customer phone number\n- All lunch or lunch specials are not available, only dinner menu\n- Do not ask about modifiers unless customer mentions\n- Do not ask about sauce or condiment \nunless customer requests\n- Do not mention pick up time, unless customer requests\n- Do not confirm order items more than once with customer\n- Do not mention or say json data to customer\n- Customer can only order from the menu\n-If customer wants to order gluten free option, transfer to manager\n\n!!!Important: Make sure json order data is valid json data\n\nThe menu includes various dishes which come with modifiers, you need to record the order in a specific format. Here is an example of how the order should be formatted in json:\n{\n    \"order_type\": \"pick up\",\n    \"order_notes\": \"one utensil, one hot sauce, peanuts allergy\",\n    \"pick_up_time\": \"ASAP\",\n    \"tip_amount\": 0,\n    \"delivery_fee\": 0,\n    \"customer_name\": \"\",\n    \"customer_phone_number\": \"\",\n    \"delivery_address\": \"\",\n    \"payment_type\": \"credit card\",\n    \"credit_card_number\": \"\",\n    \"credit_card_expiration_date\": \"\",\n    \"credit_card_security_code\": \"\",\n    \"credit_card_zip_code\": \"\",\n    \"order_items\": [\n        {\n            \"item_name\": \"Pork in Garlic Sauce - Lunch Specials #2\",\n            \"item_base_price\": 18.5,\n            \"item_quantity\": 2,\n            \"item_total\": 51,\n            \"special_instruction\": \"less spicy\",\n            \"modifiers\": [\n                {\n                    \"modifier_name\": \"No Onions\",\n                    \"modifier_price\": 2.5,\n                    \"modifier_quantity\": 1               \n               }\n            ]\n        }\n    ]\n}\n\nthink step by step when calculating total"
+        },
+        "name": "order_pick_up_with_dinner_only",
+        "edges": [
+          {
+            "condition": "customer finishes ordering and record order info in correct and complete json format",
+            "id": "edge-1745787141515",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer finishes ordering and record order info in correct and complete json format"
+            },
+            "destination_node_id": "node-1745856394124"
+          },
+          {
+            "condition": "customer wants to talk to representative",
+            "id": "edge-1745856471835",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer wants to talk to representative"
+            },
+            "destination_node_id": "node-1745788063844"
+          }
+        ],
+        "finetune_transition_examples": [
+          {
+            "destination_node_id": "node-1745856394124",
+            "transcript": [
+              {
+                "content": "no",
+                "role": "user"
+              },
+              {
+                "content": "do you want to order more dishes",
+                "role": "agent"
+              }
+            ],
+            "id": "fe-1745951150856"
+          },
+          {
+            "destination_node_id": "node-1745856394124",
+            "transcript": [
+              {
+                "content": "",
+                "role": "user"
+              },
+              {
+                "content": "Would you like to leave any special instructions or add anything else?",
+                "role": "agent"
+              }
+            ],
+            "id": "fe-1747585581037"
+          }
+        ],
+        "id": "node-1745787141515",
+        "type": "conversation",
+        "display_position": {
+          "x": -319.1635561359353,
+          "y": 1063.9812804258436
+        }
+      },
+      {
+        "tool_id": "tool-1745787269456",
+        "name": "Is-in-business-hour",
+        "edges": [
+          {
+            "condition": "true",
+            "id": "edge-1745787283306",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "true"
+            },
+            "destination_node_id": "start-node-1745526235364"
+          },
+          {
+            "condition": "false",
+            "id": "edge-1745787308438",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "false"
+            },
+            "destination_node_id": "node-1745787441035"
+          }
+        ],
+        "id": "node-1745787272405",
+        "type": "function",
+        "tool_type": "local",
+        "speak_during_execution": false,
+        "display_position": {
+          "x": -305.427962621795,
+          "y": 210.5905167775946
+        },
+        "wait_for_result": true
+      },
+      {
+        "instruction": {
+          "type": "static_text",
+          "text": "thank you for calling {{restaurant_name}} , we are currently closed. \nIf you would like to receive information such as location, menus, please let me know—I'll be happy to assist you. To leave a voice message for our manager, simply say 'manager' and I will forward your call accordingly. How can I help you today?"
+        },
+        "name": "Welcome-Off-Business-Hour",
+        "edges": [
+          {
+            "condition": "customer wants to talk to manager",
+            "id": "edge-1745787441035-lnmk4gwpi",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer wants to talk to manager"
+            },
+            "destination_node_id": "node-1745788063844"
+          }
+        ],
+        "start_speaker": "agent",
+        "id": "node-1745787441035",
+        "type": "conversation",
+        "display_position": {
+          "x": 569.1428571428573,
+          "y": 477.2857142857142
+        }
+      },
+      {
+        "instruction": {
+          "type": "prompt",
+          "text": "answer customer question, ask \"would you like to receive the information via text message\""
+        },
+        "name": "business-information",
+        "edges": [
+          {
+            "condition": "customer says yes\n",
+            "id": "edge-1745787661734",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer says yes\n"
+            },
+            "destination_node_id": "node-1745787747299"
+          }
+        ],
+        "global_node_setting": {
+          "condition": "customer asks about business hours, address or web site information, but no other information"
+        },
+        "id": "node-1745787661734",
+        "type": "conversation",
+        "display_position": {
+          "x": -424.77117182665796,
+          "y": 1813.9412841048681
+        }
+      },
+      {
+        "tool_id": "tool-1745787745393",
+        "instruction": {
+          "type": "static_text",
+          "text": "please wait while I am sending you the message."
+        },
+        "name": "Send-text-message",
+        "edges": [
+          {
+            "condition": "if successful",
+            "id": "edge-1745787791165",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "if successful"
+            },
+            "destination_node_id": "node-1745787815920"
+          }
+        ],
+        "id": "node-1745787747299",
+        "type": "function",
+        "tool_type": "local",
+        "speak_during_execution": true,
+        "display_position": {
+          "x": 145.71428571428572,
+          "y": 1917.8571428571427
+        },
+        "wait_for_result": true
+      },
+      {
+        "name": "SMS-Success",
+        "edges": [
+          {
+            "condition": "customer says no",
+            "id": "edge-1745787815920",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer says no"
+            },
+            "destination_node_id": "node-1745787864386"
+          }
+        ],
+        "id": "node-1745787815920",
+        "type": "conversation",
+        "display_position": {
+          "x": 784.2857142857142,
+          "y": 1886.4285714285713
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "we have sent you the text message, is there anything else I can help you with?"
+        }
+      },
+      {
+        "instruction": {
+          "type": "static_text",
+          "text": "Thank you for calling Nagoya Sushi, have a good day, good bye."
+        },
+        "name": "Goodbye",
+        "edges": [
+          {
+            "condition": "Describe the transition condition",
+            "id": "edge-1745787864386",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Describe the transition condition"
+            }
+          }
+        ],
+        "id": "node-1745787864386",
+        "type": "conversation",
+        "display_position": {
+          "x": 1464.7230976593673,
+          "y": 1743.5934694674734
+        },
+        "skip_response_edge": {
+          "condition": "Skip response",
+          "id": "edge-1745787918481",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Skip response"
+          },
+          "destination_node_id": "node-1745787891174"
+        }
+      },
+      {
+        "name": "End Call",
+        "id": "node-1745787891174",
+        "type": "end",
+        "display_position": {
+          "x": 2733.621986097505,
+          "y": 1960.686827981151
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "Politely end the call"
+        }
+      },
+      {
+        "transfer_destination": {
+          "type": "predefined",
+          "number": "+15714969098"
+        },
+        "edge": {
+          "condition": "Transfer failed",
+          "id": "edge-1745787985468",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Transfer failed"
+          }
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "Transferring your call now."
+        },
+        "name": "Transfer Call",
+        "id": "node-1745787985468",
+        "transfer_option": {
+          "type": "cold_transfer",
+          "show_transferee_as_caller": true
+        },
+        "type": "transfer_call",
+        "display_position": {
+          "x": 1402.0093816839583,
+          "y": 161.0329349976387
+        }
+      },
+      {
+        "instruction": {
+          "type": "static_text",
+          "text": "please wait, let me transfer your call"
+        },
+        "name": "Transfer call",
+        "edges": [
+          {
+            "condition": "Describe the transition condition",
+            "id": "edge-1745788063844",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Describe the transition condition"
+            }
+          }
+        ],
+        "global_node_setting": {
+          "condition": "customer wants to talk to representative or manager"
+        },
+        "id": "node-1745788063844",
+        "type": "conversation",
+        "display_position": {
+          "x": 1001.9771231020077,
+          "y": 137.33569576304464
+        },
+        "skip_response_edge": {
+          "condition": "Skip response",
+          "id": "edge-1745788081838",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Skip response"
+          },
+          "destination_node_id": "node-1745787985468"
+        }
+      },
+      {
+        "name": "pickup_Order Summary",
+        "edges": [
+          {
+            "condition": "customer confirms the order is correct",
+            "id": "edge-1745856394124",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer confirms the order is correct"
+            },
+            "destination_node_id": "node-1745877458003"
+          },
+          {
+            "condition": "customer wants to change dishes",
+            "id": "edge-1745877492541",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer wants to change dishes"
+            },
+            "destination_node_id": "node-1745786989776"
+          }
+        ],
+        "id": "node-1745856394124",
+        "type": "conversation",
+        "display_position": {
+          "x": 653.37161906161,
+          "y": 1260.5476638850946
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "Summarize the order and modifiers in human understandable way, and confirm with customer"
+        }
+      },
+      {
+        "name": "Order Notes",
+        "edges": [
+          {
+            "condition": "customer responds\n",
+            "id": "edge-1745877458003",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer responds\n"
+            },
+            "destination_node_id": "node-1745878480391"
+          }
+        ],
+        "id": "node-1745877458003",
+        "type": "conversation",
+        "display_position": {
+          "x": 1173.2187533624392,
+          "y": 904.753223135088
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "Any utensils or special requests?\n\n-!!! important do not store modifier information in order notes\n- save customer special requests in order notes"
+        }
+      },
+      {
+        "tool_id": "tool-1745878477590",
+        "instruction": {
+          "type": "static_text",
+          "text": "Please wait, let me calculate the total."
+        },
+        "name": "Get pick up Order Total",
+        "edges": [
+          {
+            "destination_node_id": "node-1745878553385",
+            "id": "edge-1748015080271",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "if success"
+            }
+          }
+        ],
+        "id": "node-1745878480391",
+        "type": "function",
+        "tool_type": "local",
+        "speak_during_execution": true,
+        "display_position": {
+          "x": 1194.485721895799,
+          "y": 1338.4654885223179
+        },
+        "wait_for_result": true
+      },
+      {
+        "name": "pick_up_total",
+        "edges": [
+          {
+            "condition": "customer agrees to place order",
+            "id": "edge-1745878553385",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer agrees to place order"
+            },
+            "destination_node_id": "node-1745878651126"
+          }
+        ],
+        "id": "node-1745878553385",
+        "type": "conversation",
+        "display_position": {
+          "x": 1620.6279702318802,
+          "y": 1280.6764517557651
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "tell customer the total and ask \"would you like to place the order?\"\n\n-!!! important do not store modifier information in order notes"
+        }
+      },
+      {
+        "tool_id": "tool-1745878649502",
+        "instruction": {
+          "type": "static_text",
+          "text": "Please wait while I am placing the order."
+        },
+        "name": "Place Order",
+        "edges": [
+          {
+            "condition": "if successful",
+            "id": "edge-1745878701243",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "if successful"
+            },
+            "destination_node_id": "node-1745878748117"
+          }
+        ],
+        "id": "node-1745878651126",
+        "type": "function",
+        "tool_type": "local",
+        "speak_during_execution": true,
+        "display_position": {
+          "x": 2289.6217669056496,
+          "y": 2221.082496156337
+        },
+        "wait_for_result": true
+      },
+      {
+        "instruction": {
+          "type": "static_text",
+          "text": "Your order has been placed. We have texted order details to your phone. Is there anything else I can help you with today?"
+        },
+        "name": "final step",
+        "edges": [
+          {
+            "condition": "customer says no or good bye",
+            "id": "edge-1745878748117",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer says no or good bye"
+            },
+            "destination_node_id": "node-1745878818615"
+          }
+        ],
+        "finetune_transition_examples": [
+          {
+            "destination_node_id": "node-1745878818615",
+            "transcript": [
+              {
+                "content": "no",
+                "role": "user"
+              },
+              {
+                "content": "",
+                "role": "agent"
+              }
+            ],
+            "id": "fe-1747244207672"
+          },
+          {
+            "destination_node_id": "node-1745878818615",
+            "transcript": [
+              {
+                "content": "good bye",
+                "role": "user"
+              },
+              {
+                "content": "",
+                "role": "agent"
+              }
+            ],
+            "id": "fe-1747244219593"
+          }
+        ],
+        "id": "node-1745878748117",
+        "type": "conversation",
+        "display_position": {
+          "x": 2338.119237369073,
+          "y": 3552.588891714204
+        }
+      },
+      {
+        "instruction": {
+          "type": "static_text",
+          "text": "Thank you for calling Nagoya Sushi, have a good day, good bye."
+        },
+        "name": "good bye",
+        "edges": [
+          {
+            "condition": "Describe the transition condition",
+            "id": "edge-1745878818615",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Describe the transition condition"
+            }
+          }
+        ],
+        "id": "node-1745878818615",
+        "type": "conversation",
+        "display_position": {
+          "x": 2978.9128854587,
+          "y": 1445.8190425456576
+        },
+        "skip_response_edge": {
+          "destination_node_id": "node-1745787891174",
+          "id": "edge-1747244162901",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Skip response"
+          }
+        }
+      },
+      {
+        "instruction": {
+          "type": "prompt",
+          "text": "- do not ask two questions in one sentence\n-Keep asking if customer want to add more dishes until customer says no.\n- If you do not know customer's name , ask customer name\n- If customer name is food related such as pizza, do not get confused with order\n- If you do not know customer phone number, ask customer phone number\n- All lunch or lunch specials are not available, only dinner menu\n- Do not ask about modifiers unless customer mentions\n- Do not ask about sauce or condiment \nunless customer requests\n- Do not mention pick up time, unless customer requests\n- Do not confirm order items more than once with customer\n- Do not mention or say json data to customer\n- Customer can only order from the menu\n-If customer wants to order gluten free option, transfer to manager\n\n- do not ask for payment option\n!!! Important: think step by step when calculating the total,  make sure the total of the dish is more than $25\n\n\n\n!!!Important: Make sure json order data is valid json data\n\nThe menu includes various dishes which come with modifiers, you need to record the order in a specific format. Here is an example of how the order should be formatted in json:\n{\n    \"order_type\": \"pick up\",\n    \"order_notes\": \"one utensil, one hot sauce, peanuts allergy\",\n    \"pick_up_time\": \"ASAP\",\n    \"tip_amount\": 0,\n    \"delivery_fee\": 0,\n    \"customer_name\": \"\",\n    \"customer_phone_number\": \"\",\n    \"delivery_address\": \"\",\n    \"payment_type\": \"credit card\",\n    \"credit_card_number\": \"\",\n    \"credit_card_expiration_date\": \"\",\n    \"credit_card_security_code\": \"\",\n    \"credit_card_zip_code\": \"\",\n    \"order_items\": [\n        {\n            \"item_name\": \"Pork in Garlic Sauce - Lunch Specials #2\",\n            \"item_base_price\": 18.5,\n            \"item_quantity\": 2,\n            \"item_total\": 51,\n            \"special_instruction\": \"less spicy\",\n            \"modifiers\": [\n                {\n                    \"modifier_name\": \"No Onions\",\n                    \"modifier_price\": 2.5,\n                    \"modifier_quantity\": 1               \n               }\n            ]\n        }\n    ]\n}\n\n"
+        },
+        "name": "order delivery with dinner only",
+        "edges": [
+          {
+            "destination_node_id": "node-1747400850588",
+            "id": "edge-1747399635598",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer finishes ordering and the total of the dish is more than $25"
+            }
+          }
+        ],
+        "finetune_transition_examples": [
+          {
+            "destination_node_id": "node-1747400850588",
+            "transcript": [
+              {
+                "content": "no",
+                "role": "user"
+              },
+              {
+                "content": "Would you like to add anything else?",
+                "role": "agent"
+              }
+            ],
+            "id": "fe-1747659736600"
+          }
+        ],
+        "id": "node-1747399635598",
+        "type": "conversation",
+        "display_position": {
+          "x": -706.8788605258496,
+          "y": 2767.8683369824507
+        }
+      },
+      {
+        "tool_id": "tool-1745786986727",
+        "name": "Is-in-lunch-hour_delivery",
+        "edges": [
+          {
+            "condition": "if result is True",
+            "id": "edge-1747399857407-dtd2qbeh7",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "if result is true"
+            },
+            "destination_node_id": "node-1747399956741"
+          },
+          {
+            "condition": "if result is False",
+            "id": "edge-1747399857407-8nlmai4dk",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "if result is false"
+            },
+            "destination_node_id": "node-1747399635598"
+          }
+        ],
+        "finetune_transition_examples": [],
+        "id": "node-1747399857407",
+        "type": "function",
+        "tool_type": "local",
+        "speak_during_execution": false,
+        "display_position": {
+          "x": -1405.596283032925,
+          "y": 2259.4576444968206
+        },
+        "wait_for_result": true
+      },
+      {
+        "instruction": {
+          "type": "prompt",
+          "text": "- do not ask two questions in one sentence\n-Keep asking if customer want to add more dishes until customer says no.\n- If you do not know customer's name , ask customer name\n- If customer name is food related such as pizza, do not get confused with order\n- If you do not know customer phone number, ask customer phone number\n- Do not ask about modifiers unless customer mentions\n- Do not ask about sauce or condiment \nunless customer requests\n- Do not mention pick up time, unless customer requests\n- Do not confirm order items more than once with customer\n- Do not mention or say json data to customer\n- Customer can only order from the menu\n- do not ask for payment option\n\n!!! Important: make sure the total of the dish is more than $25\n\n\n!!!Important: Make sure json order data is valid json data\n\nThe menu includes various dishes which come with modifiers, you need to record the order in a specific format. Here is an example of how the order should be formatted in json:\n{\n    \"order_type\": \"pick up\",\n    \"order_notes\": \"one utensil, one hot sauce, peanuts allergy\",\n    \"pick_up_time\": \"ASAP\",\n    \"tip_amount\": 0,\n    \"delivery_fee\": 0,\n    \"customer_name\": \"\",\n    \"customer_phone_number\": \"\",\n    \"delivery_address\": \"\",\n    \"payment_type\": \"credit card\",\n    \"credit_card_number\": \"\",\n    \"credit_card_expiration_date\": \"\",\n    \"credit_card_security_code\": \"\",\n    \"credit_card_zip_code\": \"\",\n    \"order_items\": [\n        {\n            \"item_name\": \"Pork in Garlic Sauce - Lunch Specials #2\",\n            \"item_base_price\": 18.5,\n            \"item_quantity\": 2,\n            \"item_total\": 51,\n            \"special_instruction\": \"less spicy\",\n            \"modifiers\": [\n                {\n                    \"modifier_name\": \"No Onions\",\n                    \"modifier_price\": 2.5,\n                    \"modifier_quantity\": 1               \n               }\n            ]\n        }\n    ]\n}\n\nthink step by step when calculating total"
+        },
+        "name": "order delivery with lunch and dinner",
+        "edges": [
+          {
+            "destination_node_id": "node-1747400850588",
+            "id": "edge-1747399956741-lhuup3pie",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer finishes ordering and total of the order is more than $25"
+            }
+          }
+        ],
+        "finetune_transition_examples": [
+          {
+            "destination_node_id": "node-1747400850588",
+            "transcript": [
+              {
+                "content": "no",
+                "role": "user"
+              },
+              {
+                "content": "would you like to order more dish?",
+                "role": "agent"
+              }
+            ],
+            "id": "fe-1747669501484"
+          }
+        ],
+        "id": "node-1747399956741",
+        "type": "conversation",
+        "display_position": {
+          "x": -760.0497494633435,
+          "y": 2255.6380684080186
+        }
+      },
+      {
+        "name": "delivery_Order Summary",
+        "edges": [
+          {
+            "condition": "customer confirms the order is correct",
+            "id": "edge-1747400850588-giubcby3p",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer confirms the order is correct"
+            },
+            "destination_node_id": "node-1747581991619"
+          },
+          {
+            "condition": "customer wants to change dishes",
+            "id": "edge-1747400850588-4ims5dsgr",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer wants to change dishes"
+            },
+            "destination_node_id": "node-1747399857407"
+          }
+        ],
+        "id": "node-1747400850588",
+        "type": "conversation",
+        "display_position": {
+          "x": 68.89622370377393,
+          "y": 3072.1345677233967
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "Summarize the order and modifiers in human understandable way, do not include total or prices, or delivery address and confirm with customer"
+        }
+      },
+      {
+        "name": "delivery_Order Notes",
+        "edges": [
+          {
+            "condition": "customer responds\n",
+            "id": "edge-1747581991619-80gjutl93",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer responds\n"
+            },
+            "destination_node_id": "node-1747583422122"
+          }
+        ],
+        "id": "node-1747581991619",
+        "type": "conversation",
+        "display_position": {
+          "x": 583.4650828774138,
+          "y": 3048.1201599359333
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "Any utensils or special requests?\n\n-!!! important do not store modifier information in order notes\n- save customer special requests in order notes"
+        }
+      },
+      {
+        "tool_id": "tool-1747582870727",
+        "name": "Get Driving Distance",
+        "edges": [
+          {
+            "destination_node_id": "node-1747583267683",
+            "id": "edge-1747587028467",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "distance is larger than 4 miles"
+            }
+          },
+          {
+            "destination_node_id": "node-1747399857407",
+            "id": "edge-1747587073741",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "distance is less than 4 miles"
+            }
+          }
+        ],
+        "id": "node-1747583093852",
+        "type": "function",
+        "tool_type": "local",
+        "speak_during_execution": false,
+        "display_position": {
+          "x": -1102.8950001995113,
+          "y": 3269.207500937554
+        },
+        "wait_for_result": true
+      },
+      {
+        "instruction": {
+          "type": "static_text",
+          "text": "sorry, your address is out of our delivery range, would you like to pickup instead?"
+        },
+        "name": "Conversation",
+        "edges": [
+          {
+            "destination_node_id": "node-1745786989776",
+            "id": "edge-1747583267683",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer says yes"
+            }
+          },
+          {
+            "destination_node_id": "node-1747583093852",
+            "id": "edge-1747659796055",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer provides another address"
+            }
+          }
+        ],
+        "finetune_transition_examples": [],
+        "id": "node-1747583267683",
+        "type": "conversation",
+        "display_position": {
+          "x": -596.9017596397367,
+          "y": 3350.8932679469035
+        }
+      },
+      {
+        "tool_id": "tool-1745878477590",
+        "instruction": {
+          "type": "prompt",
+          "text": "Please wait, let me calculate the total."
+        },
+        "name": "Ge Delivery Order Total",
+        "edges": [
+          {
+            "condition": "if success",
+            "id": "edge-1747583422122-8wz7c01us",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "if success"
+            },
+            "destination_node_id": "node-1747583611146"
+          }
+        ],
+        "id": "node-1747583422122",
+        "type": "function",
+        "tool_type": "local",
+        "speak_during_execution": true,
+        "display_position": {
+          "x": 987.6288941889773,
+          "y": 2997.4062677022275
+        },
+        "wait_for_result": true
+      },
+      {
+        "instruction": {
+          "type": "prompt",
+          "text": "- collect credit card number, expiration date, cvv code, zip code (for expiration date, read it such 06 2025)\n- repeat credit card number 4 digits a time back to customer and expiration date, cvv, zip code to customer slowly\n\n!!!think step by step, speak slowly and clearly, only one question at a time"
+        },
+        "model_choice": {
+          "type": "cascading",
+          "model": "gpt-4.1",
+          "high_priority": true
+        },
+        "name": "collect credit card info",
+        "edges": [
+          {
+            "destination_node_id": "node-1747583745913",
+            "id": "edge-1747583437521",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customerr provides all the information and confirm"
+            }
+          },
+          {
+            "destination_node_id": "node-1745878480391",
+            "id": "edge-1747583561887",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer wants to pickup order"
+            }
+          },
+          {
+            "destination_node_id": "node-1747583745913",
+            "id": "edge-1748372336181",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer provides tip information"
+            }
+          }
+        ],
+        "finetune_transition_examples": [
+          {
+            "destination_node_id": "node-1747583745913",
+            "transcript": [
+              {
+                "content": "",
+                "role": "user"
+              },
+              {
+                "content": "would you like to add a tip",
+                "role": "agent"
+              }
+            ],
+            "id": "fe-1748372086066"
+          },
+          {
+            "destination_node_id": "node-1747583745913",
+            "transcript": [
+              {
+                "content": "no",
+                "role": "user"
+              },
+              {
+                "content": "would you like to add a tip",
+                "role": "agent"
+              }
+            ],
+            "id": "fe-1748014461774"
+          }
+        ],
+        "id": "node-1747583437521",
+        "type": "conversation",
+        "display_position": {
+          "x": 1739.7367355881988,
+          "y": 2484.924802627395
+        }
+      },
+      {
+        "instruction": {
+          "type": "prompt",
+          "text": "tell customer the total which includes tax and delivery fee, and ask \"would you like to proceed with the order?\"\n\n"
+        },
+        "name": "delivery total",
+        "edges": [
+          {
+            "condition": "customer agrees to place order",
+            "id": "edge-1747583611146-s17rygzhs",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer agrees to place order"
+            },
+            "destination_node_id": "node-1748019577728"
+          }
+        ],
+        "finetune_transition_examples": [
+          {
+            "destination_node_id": "node-1748019577728",
+            "transcript": [
+              {
+                "content": "yes",
+                "role": "user"
+              },
+              {
+                "content": "would you like to proceed with the order",
+                "role": "agent"
+              }
+            ],
+            "id": "fe-1748375909776"
+          }
+        ],
+        "id": "node-1747583611146",
+        "type": "conversation",
+        "display_position": {
+          "x": 1381.2617681508125,
+          "y": 3101.088064019429
+        }
+      },
+      {
+        "tool_id": "tool-1747583736554",
+        "name": "Place Order With Credit Card Charge",
+        "edges": [
+          {
+            "destination_node_id": "node-1747583805084",
+            "id": "edge-1747583774191",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "if failed"
+            }
+          },
+          {
+            "destination_node_id": "node-1745878748117",
+            "id": "edge-1747583790304",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "if success"
+            }
+          }
+        ],
+        "id": "node-1747583745913",
+        "type": "function",
+        "tool_type": "local",
+        "speak_during_execution": false,
+        "display_position": {
+          "x": 2375.1457462701214,
+          "y": 3153.822809173617
+        },
+        "wait_for_result": true
+      },
+      {
+        "instruction": {
+          "type": "prompt",
+          "text": "we are sorry, your order did not go through, let me transfer you to our manager"
+        },
+        "name": "delivery order failed",
+        "edges": [
+          {
+            "id": "edge-1747583805084",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Describe the transition condition"
+            }
+          }
+        ],
+        "id": "node-1747583805084",
+        "type": "conversation",
+        "display_position": {
+          "x": 3288.799785421788,
+          "y": 3102.359440791805
+        },
+        "skip_response_edge": {
+          "destination_node_id": "node-1747583864343",
+          "id": "edge-1747583851972",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Skip response"
+          }
+        }
+      },
+      {
+        "transfer_destination": {
+          "type": "predefined",
+          "number": "+15714969098"
+        },
+        "edge": {
+          "destination_node_id": "node-1745787891174",
+          "id": "edge-1747583864343",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Transfer failed"
+          }
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "Transferring your call now."
+        },
+        "name": "Transfer Call",
+        "id": "node-1747583864343",
+        "transfer_option": {
+          "type": "cold_transfer",
+          "show_transferee_as_caller": true
+        },
+        "type": "transfer_call",
+        "display_position": {
+          "x": 3894.7943097653656,
+          "y": 3108.0004838535133
+        }
+      },
+      {
+        "name": "Get Delivery Address",
+        "edges": [
+          {
+            "destination_node_id": "node-1747583093852",
+            "id": "edge-1747585937490",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer provides complete address information\n"
+            }
+          },
+          {
+            "destination_node_id": "node-1745786989776",
+            "id": "edge-1747586746478",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "customer wants to order pickup or carry out"
+            }
+          }
+        ],
+        "id": "node-1747585937490",
+        "type": "conversation",
+        "display_position": {
+          "x": -1574.1759139308629,
+          "y": 3137.547225105518
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "- Inform the customer of delivery restrictions:  \n     \"We only deliver within a 4-mile radius, the minimum order is $25, and there is a `{{delivery_fee}}` delivery fee.\"\n  only one time\n- When say address, do not use abbreviation for PL, Rd, Dr, etc  \n- When say house or building number, say digit by digit\n- if you there is customer address, confirm it with customer\n- if there is no customer address, ask for the full delivery address, including apartment number, floor, or building name.\n- if the street name is not on the delivery  street names list in the knowledge base, ask customer to spell it\n- for #xxx, read it as \"number xxx\"\n"
+        }
+      },
+      {
+        "name": "delivery_payment options",
+        "edges": [
+          {
+            "destination_node_id": "node-1747583437521",
+            "id": "edge-1748019577728",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "credit card"
+            }
+          },
+          {
+            "destination_node_id": "node-1745878651126",
+            "id": "edge-1748019644026",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "cash"
+            }
+          }
+        ],
+        "id": "node-1748019577728",
+        "type": "conversation",
+        "display_position": {
+          "x": 1768.7074555992187,
+          "y": 3497.5835509698045
+        },
+        "instruction": {
+          "type": "static_text",
+          "text": "would you like you to pay with cash or credit card?"
+        }
+      }
+    ],
+    "start_node_id": "node-1745787272405",
+    "start_speaker": "agent",
+    "tools": [
+      {
+        "name": "is-in-lunch-hour",
+        "description": "is current time in lunch hour",
+        "tool_id": "tool-1745786986727",
+        "type": "custom",
+        "url": "https://restaurant-api-2.fly.dev/is_in_lunch_hours?restaurant_id=21",
+        "timeout_ms": 12000
+      },
+      {
+        "name": "is-in-business-hour",
+        "description": "check if it is business hour",
+        "tool_id": "tool-1745787269456",
+        "type": "custom",
+        "url": "https://restaurant-api-2.fly.dev/is_in_business_hours?restaurant_id=21",
+        "timeout_ms": 12000
+      },
+      {
+        "tool_id": "tool-1745787745393",
+        "timeout_ms": 12000,
+        "name": "send-text-message",
+        "description": "send text message to customer ",
+        "type": "custom",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_phone": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string",
+              "description": "The message you will say to the customer."
+            }
+          },
+          "required": [
+            "customer_phone",
+            "message"
+          ]
+        },
+        "url": "https://restaurant-api-2.fly.dev/send_text_message2?restaurant_id=21"
+      },
+      {
+        "tool_id": "tool-1745878477590",
+        "timeout_ms": 12000,
+        "name": "get_order_total",
+        "description": "Calculate the total price of the order",
+        "type": "custom",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_address": {
+              "type": "string"
+            },
+            "credit_card_number": {
+              "type": "string"
+            },
+            "order_notes": {
+              "type": "string"
+            },
+            "customer_phone": {
+              "type": "string"
+            },
+            "pick_up_time": {
+              "type": "string"
+            },
+            "credit_card_zip_code": {
+              "type": "string"
+            },
+            "delivery_fee": {
+              "type": "number"
+            },
+            "payment_type": {
+              "type": "string"
+            },
+            "credit_card_security_code": {
+              "type": "string"
+            },
+            "tip_amount": {
+              "type": "number"
+            },
+            "customer_name": {
+              "type": "string"
+            },
+            "credit_card_expiration_date": {
+              "type": "string"
+            },
+            "order_type": {
+              "type": "string"
+            },
+            "order_items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "item_name": {
+                    "type": "string"
+                  },
+                  "item_base_price": {
+                    "type": "number"
+                  },
+                  "special_instructions": {
+                    "type": "string"
+                  },
+                  "modifiers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "modifier_id": {
+                          "type": "integer"
+                        },
+                        "modifier_name": {
+                          "type": "string"
+                        },
+                        "modifier_quantity": {
+                          "type": "integer"
+                        },
+                        "modifier_price": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "required": [
+                      "modifier_id",
+                      "modifier_name"
+                    ]
+                  },
+                  "item_id": {
+                    "type": "integer"
+                  },
+                  "item_quantity": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "item_id",
+                  "item_name",
+                  "item_quantity",
+                  "item_base_price",
+                  "modifiers"
+                ]
+              }
+            }
+          },
+          "required": [
+            "customer_name",
+            "customer_phone",
+            "customer_address",
+            "delivery_fee",
+            "tip_amount",
+            "order_type",
+            "order_items",
+            "order_notes"
+          ]
+        },
+        "url": "https://restaurant-api-2.fly.dev/get_order_total?restaurant_id=21"
+      },
+      {
+        "tool_id": "tool-1745878649502",
+        "timeout_ms": 12000,
+        "name": "place_order",
+        "description": "place order for customer",
+        "type": "custom",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_address": {
+              "type": "string"
+            },
+            "credit_card_number": {
+              "type": "string"
+            },
+            "order_notes": {
+              "type": "string"
+            },
+            "customer_phone": {
+              "type": "string"
+            },
+            "pick_up_time": {
+              "type": "string"
+            },
+            "credit_card_zip_code": {
+              "type": "string"
+            },
+            "delivery_fee": {
+              "type": "number"
+            },
+            "payment_type": {
+              "type": "string"
+            },
+            "credit_card_security_code": {
+              "type": "string"
+            },
+            "tip_amount": {
+              "type": "number"
+            },
+            "customer_name": {
+              "type": "string"
+            },
+            "credit_card_expiration_date": {
+              "type": "string"
+            },
+            "order_type": {
+              "type": "string"
+            },
+            "order_items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "item_name": {
+                    "type": "string"
+                  },
+                  "item_base_price": {
+                    "type": "number"
+                  },
+                  "special_instructions": {
+                    "type": "string"
+                  },
+                  "modifiers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "modifier_id": {
+                          "type": "integer"
+                        },
+                        "modifier_name": {
+                          "type": "string"
+                        },
+                        "modifier_quantity": {
+                          "type": "integer"
+                        },
+                        "modifier_price": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "required": [
+                      "modifier_id",
+                      "modifier_name"
+                    ]
+                  },
+                  "item_id": {
+                    "type": "integer"
+                  },
+                  "item_quantity": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "item_id",
+                  "item_name",
+                  "item_quantity",
+                  "item_base_price",
+                  "modifiers"
+                ]
+              }
+            }
+          },
+          "required": [
+            "customer_name",
+            "customer_phone",
+            "customer_address",
+            "delivery_fee",
+            "tip_amount",
+            "order_type",
+            "order_items",
+            "order_notes"
+          ]
+        },
+        "url": "https://restaurant-api-2.fly.dev/place_order?restaurant_id=21"
+      },
+      {
+        "tool_id": "tool-1747582870727",
+        "timeout_ms": 12000,
+        "name": "get_driving_distance",
+        "description": "calculate the distance between delivery address and restaurant address",
+        "type": "custom",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "delivery_address": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "delivery_address"
+          ]
+        },
+        "url": "https://restaurant-api-2.fly.dev/get_driving_distance?restaurant_id=21"
+      },
+      {
+        "tool_id": "tool-1747583736554",
+        "timeout_ms": 12000,
+        "name": "place_order_with_credit_card_charge",
+        "description": "charge ccustomer and place the order",
+        "type": "custom",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_address": {
+              "type": "string"
+            },
+            "credit_card_number": {
+              "type": "string"
+            },
+            "order_notes": {
+              "type": "string"
+            },
+            "customer_phone": {
+              "type": "string"
+            },
+            "pick_up_time": {
+              "type": "string"
+            },
+            "credit_card_zip_code": {
+              "type": "string"
+            },
+            "delivery_fee": {
+              "type": "number"
+            },
+            "payment_type": {
+              "type": "string"
+            },
+            "credit_card_security_code": {
+              "type": "string"
+            },
+            "tip_amount": {
+              "type": "number"
+            },
+            "customer_name": {
+              "type": "string"
+            },
+            "credit_card_expiration_date": {
+              "type": "string"
+            },
+            "order_type": {
+              "type": "string"
+            },
+            "order_items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "item_name": {
+                    "type": "string"
+                  },
+                  "item_base_price": {
+                    "type": "number"
+                  },
+                  "special_instructions": {
+                    "type": "string"
+                  },
+                  "modifiers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "modifier_id": {
+                          "type": "integer"
+                        },
+                        "modifier_name": {
+                          "type": "string"
+                        },
+                        "modifier_quantity": {
+                          "type": "integer"
+                        },
+                        "modifier_price": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "required": [
+                      "modifier_id",
+                      "modifier_name"
+                    ]
+                  },
+                  "item_id": {
+                    "type": "integer"
+                  },
+                  "item_quantity": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "item_id",
+                  "item_name",
+                  "item_quantity",
+                  "item_base_price",
+                  "modifiers"
+                ]
+              }
+            }
+          },
+          "required": [
+            "customer_name",
+            "customer_phone",
+            "customer_address",
+            "delivery_fee",
+            "tip_amount",
+            "order_type",
+            "order_items",
+            "order_notes"
+          ]
+        },
+        "url": "https://restaurant-api-2.fly.dev/place_order_with_credit_card_charge?restaurant_id=21"
+      }
+    ],
+    "model_choice": {
+      "type": "cascading",
+      "model": "gpt-4o",
+      "high_priority": true
+    },
+    "model_temperature": 0,
+    "tool_call_strict_mode": false,
+    "knowledge_base_ids": [],
+    "begin_tag_display_position": {
+      "x": -612.8469518968601,
+      "y": 345.64762919439863
+    },
+    "is_published": false
+  },
+  "llmURL": null
+}

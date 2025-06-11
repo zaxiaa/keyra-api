@@ -1,0 +1,31 @@
+{
+    "order_type": "pick up",
+    "order_notes": "one utensil, one hot sauce, peanuts allergy",
+    "pick_up_time": "ASAP",
+    "tip_amount": 0,
+    "delivery_fee": 0,
+    "customer_name": "",
+    "customer_phone_number": "",
+    "delivery_address": "",
+    "payment_type": "credit card",
+    "credit_card_number": "",
+    "credit_card_expiration_date": "",
+    "credit_card_security_code": "",
+    "credit_card_zip_code": "",
+    "order_items": [
+        {
+            "item_name": "Pork in Garlic Sauce - Lunch Specials #2",
+            "item_base_price": 18.5,
+            "item_quantity": 2,
+            "item_total": 51,
+            "special_instruction": "less spicy",
+            "modifiers": [
+                {
+                    "modifier_name": "No Onions",
+                    "modifier_price": 2.5,
+                    "modifier_quantity": 1               
+               }
+            ]
+        }
+    ]
+}

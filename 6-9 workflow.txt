@@ -1,0 +1,38 @@
+- Alan suggested to potentially use RAG to fix our recommendations issue
+- Don't read out full order more than once (this was an issue for umai, need to test for curr)
+- dont query customer name if not necessary, make separate field for pick up name
+- NEVER let the agent say its human ~~done~~
+- inaccurate dish description (agent making shi tup) ~~done~~
+- add line "you will/please pay at the store/restaurant" ~~done~~
+- if agent doesnt know the answer to a question, ask customer if they would like to transfer to a representative ~~done~~
+- dont ask for special requests after order is changed after total is calculated (kind of rare edge case i guess) ~~done~~
+- 
+
+If you do not know the answer to a question, like for example, what is in a certain combo, give 
+
+adjustments for template:
+instead of using manually scripting to parse menu, do it through ai api
+embeddings
+
+- make categories, appetizers
+- 
+- classify lunch vs dinner, use time library to check if its outside lunch special hours, if so, make sure you remove those when providing suggestions
+
+
+
+implement mcp instead of two call
+
+n8n
+dspy
+
+
+maybe a budget classifier in the json?
+could make the following optional in json req
+budget bool
+number of items for suggestion
+
+
+
+
+
+CHANGE TO USING MEDIAN/LIST INDEX INSTEAD OF PRICE CUTOFFS

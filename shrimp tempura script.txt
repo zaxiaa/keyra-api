@@ -1,0 +1,41 @@
+Agent: hi , thank you for calling Umai Nori, how can I help you?
+User: Yes. Is this on back off of Connecticut Avenue?
+Agent: We’re on 20th Street, between L and M Streets, near Connecticut Avenue. Would you like me to send the 
+User: Okay. Yeah. 
+Agent: address via text?
+User: No. No. I have the address. I'm right here on l Street. Can I put in a order, please, and tell you when I get there?
+Agent: Sure! Just a heads-up, we only offer pick-up orders. What would you like to order?
+User: Okay. I 
+Agent: Of course!
+User: would like to order a classic rose with a salmon roll with sticks. Six piece.
+User: can you add extra can you add extra sesame seeds on that, please? And then I would like to order six piece of shrimp tempura.
+Agent: Got it! So far, I have 
+User: With
+Agent: a Maguro Rose, a Salmon Roll with extra sesame seeds, and a six-piece Shrimp Tempura. Would you like to add anything else?
+User: Yes. Yes. Can I have e u and spicy mayo on the side along with the wasabi, please?
+Agent: Got it! I'll add eel sauce, spicy mayo, and wasabi on the side. Would you like to add 
+User: Yes. 
+Agent: anything else to your order?
+User: No. Thank you. Can I have my total in her long would be till we get done? Hey. How are you doing?
+Agent: Alright, here's your order: a Maguro Rose, a Salmon Roll with extra sesame seeds, a six-piece Shrimp Tempura, with eel sauce, spicy mayo, and wasabi on the side. It'll be ready in about 20 
+User: Yes. 
+Agent: minutes. Does everything look correct?
+User: Okay. Yeah. How much is it?
+Agent: Your total comes to $53.00. Any other requests?
+User: How much?
+Agent: Please wait, let me calculate the total
+Agent: Your total is $51.42. Would you like to place the 
+Agent: order?
+User: It's You said fifty one?
+Agent: Yes, it's $51.42. Would you like to place the order?
+User: No. It's that should be wrong because I want classic roast salmon roast, for six pieces, which is online, saying it should be seven dollars.
+Agent: The total 
+User: And then how 
+Agent: includes the Maguro 
+User: much?
+Agent: The total is $51.42. 
+User: You say 
+Agent: Would you like to place the order?
+User: can I speak to a agent?
+Agent: Let me transfer you to a human representative. Hold on one moment, please.
+User: Hey. How are you? Yes. This is

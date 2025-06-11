@@ -1,0 +1,12 @@
+changed recommendations to be taking index
+
+build website
+Keyra.ai
+
+meeting:
+figure out reservations with voice ai
+get name, number, date, time, number of people
+if the restaurant has open table set up, just send them an open table link
+if they don't, integrate with custom pos? just make some api call
+if the number of people is greater than 8, transfer to a rep
+if there is a repeated issue, transfer to rep
