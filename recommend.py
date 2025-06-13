@@ -23,15 +23,13 @@ class MenuItem(BaseModel):
 
 class RecommendationRequest(BaseModel):
     menu: List[MenuItem]  # List of pre-parsed menu items
-    category: Optional[str] = None  # Optional category filter
-    price_range: PriceRange  # Price range filter
+    args: Dict[str, Any]  # Arguments including category and price_range
 
 class RecommendationResponse(BaseModel):
     items: List[MenuItem]
 
-# --- 3. RECOMMENDATION LOGIC (UNCHANGED) ---
+# --- 3. RECOMMENDATION LOGIC ---
 def get_recommendations_from_list_thirds(items: list[dict]) -> dict:
-    """Same as before"""
     if not items:
         return {"items": []}
 
@@ -68,6 +66,11 @@ async def health_check():
 
 @app.post("/recommend", response_model=RecommendationResponse)
 async def recommend(request_data: RecommendationRequest):
+    # Extract arguments from request
+    args = request_data.args
+    category = args.get('category')
+    price_range = args.get('price_range')
+    
     # Convert Pydantic objects to dicts for processing
     menu_items = [item.dict() for item in request_data.menu]
     
@@ -85,21 +88,27 @@ async def recommend(request_data: RecommendationRequest):
         ]
 
     # Filter by category
-    if request_data.category:
+    if category:
         candidate_items = [
             item for item in time_filtered_menu 
-            if request_data.category.lower() in item['category'].lower()
+            if category.lower() in item['category'].lower()
         ]
     else:
         candidate_items = time_filtered_menu
     
     # Filter by price range
-    min_price = request_data.price_range.min
-    max_price = request_data.price_range.max
-    candidate_items = [
-        item for item in candidate_items 
-        if min_price <= item["price"] <= max_price
-    ]
+    try:
+        min_price = float(price_range['min'])
+        max_price = float(price_range['max'])
+        candidate_items = [
+            item for item in candidate_items 
+            if min_price <= item["price"] <= max_price
+        ]
+    except (KeyError, TypeError, ValueError):
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid price_range format. Use {'min': number, 'max': number}"
+        )
 
     return get_recommendations_from_list_thirds(candidate_items)
 
