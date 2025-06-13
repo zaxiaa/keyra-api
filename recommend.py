@@ -66,11 +66,6 @@ async def health_check():
 
 @app.post("/recommend", response_model=RecommendationResponse)
 async def recommend(request_data: RecommendationRequest):
-    # Extract arguments from request
-    args = request_data.args
-    category = args.get('category')
-    price_range = args.get('price_range')
-    
     # Convert Pydantic objects to dicts for processing
     menu_items = [item.dict() for item in request_data.menu]
     
@@ -87,7 +82,12 @@ async def recommend(request_data: RecommendationRequest):
             if not item.get("is_lunch_item", False)
         ]
 
-    # Filter by category
+    # Extract arguments from request
+    args = request_data.args
+    category = args.get('category')
+    price_range = args.get('price_range')
+
+    # Filter by category if provided
     if category:
         candidate_items = [
             item for item in time_filtered_menu 
