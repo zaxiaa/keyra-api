@@ -15,21 +15,16 @@ class PriceRange(BaseModel):
     min: float
     max: float
 
-class MenuItemInput(BaseModel):
+class MenuItem(BaseModel):
     name: str
     price: float
     category: str
     is_lunch_item: bool
 
 class RecommendationRequest(BaseModel):
-    menu: List[MenuItemInput]  # Accept pre-parsed menu items
-    args: Dict[str, Any]
-
-class MenuItem(BaseModel):
-    name: str
-    price: float
-    category: str
-    is_lunch_item: bool
+    menu: List[MenuItem]  # List of pre-parsed menu items
+    category: Optional[str] = None  # Optional category filter
+    price_range: PriceRange  # Price range filter
 
 class RecommendationResponse(BaseModel):
     items: List[MenuItem]
@@ -73,45 +68,39 @@ async def health_check():
 
 @app.post("/recommend", response_model=RecommendationResponse)
 async def recommend(request_data: RecommendationRequest):
-    # Time-based filtering is always active
+    # Convert Pydantic objects to dicts for processing
+    menu_items = [item.dict() for item in request_data.menu]
+    
+    # Time-based filtering
     tz = pytz.timezone('US/Eastern')
     now = datetime.now(tz)
     is_lunch_hours = (0 <= now.weekday() <= 4) and (11 <= now.hour < 15)
     
     if is_lunch_hours:
-        time_filtered_menu = request_data.menu
+        time_filtered_menu = menu_items
     else:
-        time_filtered_menu = [item for item in request_data.menu if not item.is_lunch_item]
+        time_filtered_menu = [
+            item for item in menu_items 
+            if not item.get("is_lunch_item", False)
+        ]
 
-    # Extract arguments from request
-    args = request_data.args
-    category = args.get('category')
-    price_range = args.get('price_range')
-
-    # Convert Pydantic objects to dicts for filtering
-    time_filtered_menu_dicts = [item.dict() for item in time_filtered_menu]
-
-    # Filter by category first, if provided
-    if category:
+    # Filter by category
+    if request_data.category:
         candidate_items = [
-            item for item in time_filtered_menu_dicts 
-            if category.lower() in item['category'].lower()
+            item for item in time_filtered_menu 
+            if request_data.category.lower() in item['category'].lower()
         ]
     else:
-        candidate_items = time_filtered_menu_dicts
+        candidate_items = time_filtered_menu
     
     # Filter by price range
-    try:
-        min_price = float(price_range['min'])
-        max_price = float(price_range['max'])
-        candidate_items = [
-            item for item in candidate_items 
-            if min_price <= item.get("price", 0) <= max_price
-        ]
-    except (KeyError, TypeError, ValueError):
-        raise HTTPException(status_code=400, detail="Invalid price_range format.")
+    min_price = request_data.price_range.min
+    max_price = request_data.price_range.max
+    candidate_items = [
+        item for item in candidate_items 
+        if min_price <= item["price"] <= max_price
+    ]
 
-    # Pass the final list of candidates to the recommendation logic
     return get_recommendations_from_list_thirds(candidate_items)
 
 # --- 5. FOR DEPLOYMENT ---
