@@ -460,18 +460,30 @@ async def recommend(request: Request):
         body = await request.json()
         logger.info(f"Raw request body: {body}")
         
-        # Validate the request structure
+        # Validate the request structure - handle nested args
         if not isinstance(body, dict):
             raise HTTPException(status_code=400, detail="Request body must be a JSON object")
         if 'args' not in body:
             raise HTTPException(status_code=400, detail="args is required in request body")
         if not isinstance(body['args'], dict):
             raise HTTPException(status_code=400, detail="args must be a JSON object")
-        if 'price_range' not in body['args']:
+        
+        # Extract the nested args structure
+        nested_args = body['args']
+        if 'args' in nested_args:
+            # Handle the case where we have nested args
+            actual_args = nested_args['args']
+        else:
+            # Handle the case where args is at the top level
+            actual_args = nested_args
+        
+        if not isinstance(actual_args, dict):
+            raise HTTPException(status_code=400, detail="args must be a JSON object")
+        if 'price_range' not in actual_args:
             raise HTTPException(status_code=400, detail="price_range is required in args")
         
         # Extract and validate price_range
-        price_range = body['args']['price_range']
+        price_range = actual_args['price_range']
         if isinstance(price_range, str):
             try:
                 price_range = json.loads(price_range)
@@ -490,7 +502,9 @@ async def recommend(request: Request):
             raise HTTPException(status_code=400, detail="price_range min and max must be numbers")
         
         # Extract category
-        category = body['args'].get('category')
+        category = actual_args.get('category')
+        
+        logger.info(f"Extracted - category: {category}, price_range: {price_range}")
         
         # Load menu
         menu_text = get_menu_text(str(1))  # Assuming restaurant_id 1 for now
