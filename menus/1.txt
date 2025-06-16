@@ -1,9 +1,17 @@
+##Restaurant Info
+
+### For pick up orders, customers will pay at restaurant. Do not ask for payment information 
+
+### Lunch menu available on Monday, Tuesday, Wednesday, Thursday, Friday from 11:00 AM to 3:00 PM, not available on Saturday and Sunday
+
+### Lunch Specials only available on Monday, Tuesday, Wednesday, Thursday, Friday from 11:00 AM to 3:00 PM, not available on Saturday and Sunday, not available after 3:00 PM
+
 # Hong Kong Palace Menu
 ## Appetizers
 
-- **A1.** Egg Roll (2) - $3.50  
-- **A2.** Vegetable Spring Roll (2) - $3.50  
-- **A3.** Green Onion Pancake - $8.95  
+- **A1.** Egg Roll (2) - $4.50  
+- **A2.** Vegetable Spring Roll (2) - $4.50  
+- **A3.** Green Onion Pancake - $4.50  
 - **A4.** Sesame Ball (6) - $9.95  
 - **A5.** Shrimp Tempura (4) - $9.95  
 - **A6.** Chengdu Zhongs Spring Dumpling - $9.95  (spicy & numb)

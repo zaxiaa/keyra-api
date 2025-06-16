@@ -2,7 +2,7 @@ import re
 import json
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 from datetime import datetime
 import pytz
 import random
@@ -74,9 +74,64 @@ def get_menu_text(restaurant_id: str) -> str:
         )
     return menu_file.read_text(encoding='utf-8')
 
+def extract_lunch_hours(text: str) -> Tuple[int, int]:
+    """Extract lunch hours from menu text"""
+    # Look for patterns like "11:00 AM to 3:00 PM" or "11 AM to 3 PM"
+    time_pattern = r'(\d{1,2})(?::\d{2})?\s*(?:AM|PM)\s*to\s*(\d{1,2})(?::\d{2})?\s*(?:AM|PM)'
+    match = re.search(time_pattern, text, re.IGNORECASE)
+    
+    if match:
+        start_hour = int(match.group(1))
+        end_hour = int(match.group(2))
+        
+        # Convert to 24-hour format
+        if "PM" in match.group(0) and start_hour < 12:
+            start_hour += 12
+        if "PM" in match.group(0) and end_hour < 12:
+            end_hour += 12
+        if "AM" in match.group(0) and start_hour == 12:
+            start_hour = 0
+        if "AM" in match.group(0) and end_hour == 12:
+            end_hour = 0
+            
+        return start_hour, end_hour
+    
+    # Default to 11 AM - 3 PM if no hours found
+    return 11, 15
+
+def extract_lunch_days(text: str) -> List[int]:
+    """Extract lunch days from menu text (0=Monday, 6=Sunday)"""
+    days = []
+    if "Monday" in text or "Mon" in text:
+        days.append(0)
+    if "Tuesday" in text or "Tue" in text:
+        days.append(1)
+    if "Wednesday" in text or "Wed" in text:
+        days.append(2)
+    if "Thursday" in text or "Thu" in text:
+        days.append(3)
+    if "Friday" in text or "Fri" in text:
+        days.append(4)
+    if "Saturday" in text or "Sat" in text:
+        days.append(5)
+    if "Sunday" in text or "Sun" in text:
+        days.append(6)
+    return days if days else [0, 1, 2, 3, 4]  # Default to Mon-Fri if no days found
+
 # --- 4. GEMINI MENU PARSER ---
 def parse_menu_with_gemini(text: str) -> list[dict]:
     """Uses Gemini to parse menu text into structured data"""
+    # Extract restaurant info section and menu section
+    menu_section = text
+    if "##Restaurant Info" in text:
+        # Split at the first menu section header after Restaurant Info
+        parts = text.split("##Restaurant Info", 1)
+        if len(parts) > 1:
+            # Find the first ## that starts a menu section
+            menu_parts = parts[1].split("##", 1)
+            if len(menu_parts) > 1:
+                menu_section = "##" + menu_parts[1]
+    
     prompt = f"""
 **Task:** Parse this restaurant menu into structured JSON data. Extract every menu item with:
 - name
@@ -108,15 +163,10 @@ def parse_menu_with_gemini(text: str) -> list[dict]:
 }}
 
 **Menu to Parse:**
-{text}
+{menu_section}
 """
     try:
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
-                response_mime_type="application/json"
-            )
-        )
+        response = model.generate_content(prompt)
         parsed = json.loads(response.text)
         return parsed.get("menu", [])
     
@@ -176,13 +226,17 @@ async def recommend(
     # Get menu text from file
     menu_text = get_menu_text(restaurant_id)
     
+    # Extract lunch hours and days
+    lunch_start, lunch_end = extract_lunch_hours(menu_text)
+    lunch_days = extract_lunch_days(menu_text)
+    
     # Parse menu using Gemini
     parsed_menu = parse_menu_with_gemini(menu_text)
     
     # Time-based filtering
     tz = pytz.timezone('US/Eastern')
     now = datetime.now(tz)
-    is_lunch_hours = (0 <= now.weekday() <= 4) and (11 <= now.hour < 15)
+    is_lunch_hours = (now.weekday() in lunch_days) and (lunch_start <= now.hour < lunch_end)
     
     if is_lunch_hours:
         time_filtered_menu = parsed_menu
