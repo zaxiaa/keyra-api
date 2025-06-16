@@ -1,7 +1,7 @@
 import re
 import json
 import logging
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List, Tuple
 from datetime import datetime
@@ -65,7 +65,6 @@ class MenuItem(BaseModel):
     price: float
     category: str
     is_lunch_item: bool
-    description: Optional[str] = None
 
 class RecommendationRequest(BaseModel):
     args: Dict[str, Any]
@@ -222,16 +221,22 @@ Return ONLY the JSON array, no other text or formatting."""
 
 # --- 5. RECOMMENDATION LOGIC ---
 def get_recommendations_from_list_thirds(items: list[dict]) -> dict:
-    """Get recommendations by dividing items into thirds and selecting one from each"""
+    """
+    Takes a list of items, sorts it by price, divides the list into thirds,
+    and randomly selects one item from each third.
+    """
     if not items:
         return {"items": []}
 
+    # 1. Sort the list of items by price
     sorted_items = sorted(items, key=lambda x: x['price'])
     n = len(sorted_items)
     
+    # Handle cases with very few items by returning a random sample
     if n < 3:
         return {"items": random.sample(sorted_items, k=n)}
 
+    # 2. Divide the sorted LIST into three groups by index
     third_size = n // 3
     first_third_list = sorted_items[0:third_size]
     second_third_list = sorted_items[third_size : 2 * third_size]
@@ -239,6 +244,7 @@ def get_recommendations_from_list_thirds(items: list[dict]) -> dict:
 
     recommendations = []
 
+    # 3. Randomly select one item from each non-empty list group
     if first_third_list:
         recommendations.append(random.choice(first_third_list))
     if second_third_list:
@@ -380,93 +386,53 @@ async def health_check():
     return {"status": "healthy"}
 
 @app.post("/recommend", response_model=RecommendationResponse)
-async def recommend(
-    request_data: RecommendationRequest,
-    restaurant_id: str = Query(..., description="Restaurant identifier to load menu from")
-):
+async def recommend(request_data: RecommendationRequest):
     try:
         # Load menu
-        menu_text = get_menu_text(restaurant_id)
-        logger.info(f"Loaded menu for restaurant {restaurant_id}")
+        menu_text = get_menu_text(str(1))  # Assuming restaurant_id 1 for now
+        if not menu_text:
+            raise HTTPException(status_code=404, detail="Menu not found")
         
-        # Try to get cached menu
-        menu_items = get_cached_menu(int(restaurant_id))
-        
+        # Get cached menu or parse new one
+        menu_items = get_cached_menu(1)
         if not menu_items:
-            # Parse menu with Gemini
             logger.info("Sending menu to Gemini for parsing")
             menu_items = parse_menu_with_gemini(menu_text)
-            logger.info(f"Parsed {len(menu_items)} menu items")
-            
-            # Cache the parsed menu
-            cache_menu(int(restaurant_id), menu_items)
+            if menu_items:
+                logger.info(f"Parsed {len(menu_items)} menu items")
+                cache_menu(1, menu_items)
+        
+        # Time-based filtering
+        tz = pytz.timezone('US/Eastern')
+        now = datetime.now(tz)
+        is_lunch_hours = (0 <= now.weekday() <= 4) and (11 <= now.hour < 15)
+        
+        if is_lunch_hours:
+            time_filtered_menu = menu_items
         else:
-            logger.info("Using cached menu")
-        
-        # Get current time in EST
-        est = pytz.timezone('US/Eastern')
-        current_time = datetime.now(est)
-        current_hour = current_time.hour
-        current_day = current_time.weekday()
-        
-        # Filter items based on category and price range
-        filtered_items = []
-        for item in menu_items:
-            try:
-                # Check category
-                if request_data.args.get('category') and item.get('category') != request_data.args['category']:
-                    continue
-                    
-                # Check price range
-                if request_data.args.get('price_range'):
-                    price_range = request_data.args['price_range']
-                    
-                    # Get the appropriate price based on time and availability
-                    price = get_price(item)
-                    
-                    if price < price_range['min'] or price > price_range['max']:
-                        continue
-                
-                filtered_items.append(item)
-            except Exception as e:
-                logger.error(f"Error processing menu item: {str(e)}")
-                continue
-        
-        # If we have filtered items, split into thirds and select one from each
-        if filtered_items:
-            # Sort by price, using lunch price if available and it's lunch time
-            def get_price(item):
-                if (item.get('is_lunch_item', False) and 
-                    current_day < 5 and  # Monday-Friday
-                    11 <= current_hour < 15):
-                    return item.get('lunch_price', item.get('price', float('inf')))
-                return item.get('price', float('inf'))
-            
-            sorted_items = sorted(filtered_items, key=get_price)
-            n = len(sorted_items)
-            
-            if n < 3:
-                recommendations = random.sample(sorted_items, k=n)
-            else:
-                third_size = n // 3
-                first_third = sorted_items[0:third_size]
-                second_third = sorted_items[third_size:2*third_size]
-                third_third = sorted_items[2*third_size:]
-                
-                recommendations = []
-                if first_third:
-                    recommendations.append(random.choice(first_third))
-                if second_third:
-                    recommendations.append(random.choice(second_third))
-                if third_third:
-                    recommendations.append(random.choice(third_third))
-            
-            return {"items": recommendations}
+            time_filtered_menu = [item for item in menu_items if not item.get("is_lunch_item", False)]
+
+        # Extract arguments from request
+        args = request_data.args
+        category = args.get('category')
+        price_range = args.get('price_range')
+
+        # Filter by category first, if provided
+        if category:
+            candidate_items = [item for item in time_filtered_menu if category.lower() in item['category'].lower()]
         else:
-            return {"items": []}
-            
-    except HTTPException:
-        raise
+            candidate_items = time_filtered_menu
+        
+        try:
+            min_price = float(price_range['min'])
+            max_price = float(price_range['max'])
+            candidate_items = [item for item in candidate_items if min_price <= item.get("price", 0) <= max_price]
+        except (KeyError, TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="Invalid price_range format.")
+
+        # Pass the final list of candidates to the recommendation logic
+        return get_recommendations_from_list_thirds(candidate_items)
+        
     except Exception as e:
         logger.error(f"Error in recommendation endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
