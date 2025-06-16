@@ -93,30 +93,37 @@ def get_menu_text(restaurant_id: str) -> str:
             detail=f"Failed to read menu file: {str(e)}"
         )
 
-def extract_lunch_hours(text: str) -> Tuple[int, int]:
-    """Extract lunch hours from menu text"""
-    # Look for patterns like "11:00 AM to 3:00 PM" or "11 AM to 3 PM"
-    time_pattern = r'(\d{1,2})(?::\d{2})?\s*(?:AM|PM)\s*to\s*(\d{1,2})(?::\d{2})?\s*(?:AM|PM)'
-    match = re.search(time_pattern, text, re.IGNORECASE)
-    
-    if match:
-        start_hour = int(match.group(1))
-        end_hour = int(match.group(2))
-        
-        # Convert to 24-hour format
-        if "PM" in match.group(0) and start_hour < 12:
-            start_hour += 12
-        if "PM" in match.group(0) and end_hour < 12:
-            end_hour += 12
-        if "AM" in match.group(0) and start_hour == 12:
-            start_hour = 0
-        if "AM" in match.group(0) and end_hour == 12:
-            end_hour = 0
+def extract_lunch_hours(menu_text):
+    """Extract lunch hours from menu text."""
+    try:
+        # Look for lunch hours pattern
+        lunch_pattern = r"Lunch\s+Hours:\s+(\d{1,2}:\d{2}\s*[AaPp][Mm])\s*-\s*(\d{1,2}:\d{2}\s*[AaPp][Mm])"
+        match = re.search(lunch_pattern, menu_text)
+        if match:
+            start_time = match.group(1).strip()
+            end_time = match.group(2).strip()
             
-        return start_hour, end_hour
-    
-    # Default to 11 AM - 3 PM if no hours found
-    return 11, 15
+            # Convert to 24-hour format
+            start_dt = datetime.strptime(start_time, "%I:%M %p")
+            end_dt = datetime.strptime(end_time, "%I:%M %p")
+            
+            # Format as HH:MM
+            start_24 = start_dt.strftime("%H:%M")
+            end_24 = end_dt.strftime("%H:%M")
+            
+            # Extract days
+            days_pattern = r"Monday\s*-\s*Sunday"
+            days_match = re.search(days_pattern, menu_text)
+            days = list(range(7)) if days_match else []
+            
+            return {
+                "start": start_24,
+                "end": end_24,
+                "days": days
+            }
+    except Exception as e:
+        logger.error(f"Error extracting lunch hours: {str(e)}")
+    return None
 
 def extract_lunch_days(text: str) -> List[int]:
     """Extract lunch days from menu text (0=Monday, 6=Sunday)"""
@@ -138,84 +145,57 @@ def extract_lunch_days(text: str) -> List[int]:
     return days if days else [0, 1, 2, 3, 4]  # Default to Mon-Fri if no days found
 
 # --- 4. GEMINI MENU PARSER ---
-def parse_menu_with_gemini(text: str) -> list[dict]:
-    """Uses Gemini to parse menu text into structured data"""
+def parse_menu_with_gemini(menu_text: str) -> List[Dict]:
+    """Parse menu text using Gemini API."""
     try:
-        # Extract restaurant info section and menu section
-        menu_section = text
-        if "##Restaurant Info" in text:
-            # Split at the first menu section header after Restaurant Info
-            parts = text.split("##Restaurant Info", 1)
-            if len(parts) > 1:
-                # Find the first ## that starts a menu section
-                menu_parts = parts[1].split("##", 1)
-                if len(menu_parts) > 1:
-                    menu_section = "##" + menu_parts[1]
+        # Configure Gemini API
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
+        logger.info("Successfully configured Gemini API")
         
-        logger.info("Sending menu to Gemini for parsing")
-        prompt = f"""
-**Task:** Parse this restaurant menu into structured JSON data. Extract every menu item with:
-- name
-- price (convert to float)
-- category
-- is_lunch_item (true ONLY for lunch-specific items)
-- description (optional, for any additional info like "spicy" or "vegetarian")
+        # Create prompt
+        prompt = f"""Parse this menu into a JSON array of items. Each item should have:
+- name: string
+- price: number
+- category: string
+- is_lunch_item: boolean
+- description: string or null
 
-**Rules:**
-1. Track section headers (e.g., "Appetizers", "Lunch Specials") as categories
-2. Set is_lunch_item=True if:
-   - Category contains "Lunch"
-   - Item name has "(Lunch)"
-   - Two prices exist (lunch/dinner)
-3. For multiple prices, create two items: "Item (Lunch)" and "Item (Dinner)"
-4. Split choice items (with "/") into separate items
-5. Skip items without prices
-6. Output ONLY valid JSON in this format:
-{{
-  "menu": [
-    {{
-      "name": "Item Name",
-      "price": 12.99,
-      "category": "Category",
-      "is_lunch_item": false,
-      "description": "Optional description"
-    }}
-  ]
-}}
+Menu text:
+{menu_text}
 
-**Menu to Parse:**
-{menu_section}
-"""
-        try:
-            response = model.generate_content(prompt)
-            logger.info("Received response from Gemini")
-        except Exception as e:
-            logger.error(f"Gemini API call failed: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to call Gemini API: {str(e)}"
-            )
+Return ONLY the JSON array, no other text or formatting."""
+
+        # Get response from Gemini
+        response = model.generate_content(prompt)
+        response_text = response.text.strip()
         
+        # Remove markdown code block if present
+        if response_text.startswith('```json'):
+            response_text = response_text[7:]
+        if response_text.startswith('```'):
+            response_text = response_text[3:]
+        if response_text.endswith('```'):
+            response_text = response_text[:-3]
+        
+        # Parse JSON response
         try:
-            parsed = json.loads(response.text)
-            logger.info(f"Successfully parsed {len(parsed.get('menu', []))} menu items")
-            return parsed.get("menu", [])
+            parsed_response = json.loads(response_text)
+            if isinstance(parsed_response, dict) and 'menu' in parsed_response:
+                menu_items = parsed_response['menu']
+            else:
+                menu_items = parsed_response
+                
+            logger.info(f"Successfully parsed {len(menu_items)} menu items")
+            return menu_items
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse Gemini response as JSON: {str(e)}")
-            logger.error(f"Raw response: {response.text}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to parse menu: Invalid JSON response from Gemini"
-            )
-    
-    except HTTPException:
-        raise
+            logger.error(f"Raw response: {response_text}")
+            raise HTTPException(status_code=500, detail="Failed to parse menu")
+            
     except Exception as e:
-        logger.error(f"Error in menu parsing: {str(e)}")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Menu parsing failed: {str(e)}"
-        )
+        logger.error(f"Error calling Gemini API: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to call Gemini API: {str(e)}")
 
 # --- 5. RECOMMENDATION LOGIC ---
 def get_recommendations_from_list_thirds(items: list[dict]) -> dict:
@@ -245,6 +225,30 @@ def get_recommendations_from_list_thirds(items: list[dict]) -> dict:
         
     return {"items": recommendations}
 
+# Add cache directory setup
+CACHE_DIR = Path("cache")
+CACHE_DIR.mkdir(exist_ok=True)
+
+def get_cached_menu(restaurant_id: int) -> Optional[List[Dict]]:
+    """Get cached menu for restaurant if it exists."""
+    cache_file = CACHE_DIR / f"menu_{restaurant_id}.json"
+    if cache_file.exists():
+        try:
+            with open(cache_file, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Error reading cache: {str(e)}")
+    return None
+
+def cache_menu(restaurant_id: int, menu_items: List[Dict]):
+    """Cache parsed menu items."""
+    cache_file = CACHE_DIR / f"menu_{restaurant_id}.json"
+    try:
+        with open(cache_file, 'w') as f:
+            json.dump(menu_items, f)
+    except Exception as e:
+        logger.error(f"Error caching menu: {str(e)}")
+
 # --- 6. API ENDPOINTS ---
 @app.get("/")
 async def root():
@@ -270,14 +274,23 @@ async def recommend(
         menu_text = get_menu_text(restaurant_id)
         logger.info(f"Loaded menu for restaurant {restaurant_id}")
         
-        # Extract lunch hours and days
-        lunch_start, lunch_end = extract_lunch_hours(menu_text)
-        lunch_days = extract_lunch_days(menu_text)
-        logger.info(f"Lunch hours: {lunch_start}:00-{lunch_end}:00, Days: {lunch_days}")
+        # Try to get cached menu first
+        menu_items = get_cached_menu(int(restaurant_id))
         
-        # Parse menu with Gemini
-        menu_items = parse_menu_with_gemini(menu_text)
-        logger.info(f"Parsed {len(menu_items)} menu items")
+        if not menu_items:
+            # Extract lunch hours and days
+            lunch_hours = extract_lunch_hours(menu_text)
+            lunch_days = extract_lunch_days(menu_text)
+            logger.info(f"Lunch hours: {lunch_hours}, Days: {lunch_days}")
+            
+            # Parse menu with Gemini
+            logger.info("Sending menu to Gemini for parsing")
+            menu_items = parse_menu_with_gemini(menu_text)
+            
+            # Cache the parsed menu
+            cache_menu(int(restaurant_id), menu_items)
+        else:
+            logger.info("Using cached menu")
         
         # Get current time in EST
         est = pytz.timezone('US/Eastern')
@@ -302,7 +315,7 @@ async def recommend(
             
             # Check if lunch item is available
             if item['is_lunch_item']:
-                if current_day not in lunch_days or not (lunch_start <= current_hour < lunch_end):
+                if current_day not in lunch_days or not (lunch_hours['start'] <= current_hour < lunch_hours['end']):
                     continue
             
             filtered_items.append(item)
