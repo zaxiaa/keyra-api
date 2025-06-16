@@ -247,23 +247,40 @@ def get_recommendations_from_list_thirds(items: list[dict]) -> dict:
 CACHE_DIR = Path("cache")
 CACHE_DIR.mkdir(exist_ok=True)
 
-def get_cached_menu(restaurant_id: int) -> Optional[List[Dict]]:
-    """Get cached menu for restaurant if it exists."""
+def get_cached_menu(restaurant_id: int) -> Tuple[Optional[List[Dict]], Optional[Dict]]:
+    """Get cached menu and lunch hours for restaurant if they exist."""
     cache_file = CACHE_DIR / f"menu_{restaurant_id}.json"
+    lunch_hours_file = CACHE_DIR / f"lunch_hours_{restaurant_id}.json"
+    
+    menu_items = None
+    lunch_hours = None
+    
     if cache_file.exists():
         try:
             with open(cache_file, 'r') as f:
-                return json.load(f)
+                menu_items = json.load(f)
         except Exception as e:
-            logger.error(f"Error reading cache: {str(e)}")
-    return None
+            logger.error(f"Error reading menu cache: {str(e)}")
+            
+    if lunch_hours_file.exists():
+        try:
+            with open(lunch_hours_file, 'r') as f:
+                lunch_hours = json.load(f)
+        except Exception as e:
+            logger.error(f"Error reading lunch hours cache: {str(e)}")
+            
+    return menu_items, lunch_hours
 
-def cache_menu(restaurant_id: int, menu_items: List[Dict]):
-    """Cache parsed menu items."""
+def cache_menu(restaurant_id: int, menu_items: List[Dict], lunch_hours: Dict):
+    """Cache parsed menu items and lunch hours."""
     cache_file = CACHE_DIR / f"menu_{restaurant_id}.json"
+    lunch_hours_file = CACHE_DIR / f"lunch_hours_{restaurant_id}.json"
+    
     try:
         with open(cache_file, 'w') as f:
             json.dump(menu_items, f)
+        with open(lunch_hours_file, 'w') as f:
+            json.dump(lunch_hours, f)
     except Exception as e:
         logger.error(f"Error caching menu: {str(e)}")
 
@@ -318,6 +335,17 @@ Return ONLY the JSON object, no other text or formatting."""
         logger.error(f"Error extracting lunch hours with Gemini: {str(e)}")
         return None
 
+def is_within_lunch_hours(current_time: datetime, lunch_hours: Dict) -> bool:
+    """Check if current time is within lunch hours."""
+    if not lunch_hours or not lunch_hours.get('start') or not lunch_hours.get('end'):
+        return False
+        
+    current_hour = current_time.hour
+    current_minute = current_time.minute
+    current_time_str = f"{current_hour:02d}:{current_minute:02d}"
+    
+    return lunch_hours['start'] <= current_time_str <= lunch_hours['end']
+
 # --- 6. API ENDPOINTS ---
 @app.get("/")
 async def root():
@@ -343,8 +371,8 @@ async def recommend(
         menu_text = get_menu_text(restaurant_id)
         logger.info(f"Loaded menu for restaurant {restaurant_id}")
         
-        # Try to get cached menu first
-        menu_items = get_cached_menu(int(restaurant_id))
+        # Try to get cached menu and lunch hours
+        menu_items, lunch_hours = get_cached_menu(int(restaurant_id))
         
         if not menu_items:
             # Extract lunch hours and days using Gemini
@@ -359,15 +387,14 @@ async def recommend(
             logger.info("Sending menu to Gemini for parsing")
             menu_items = parse_menu_with_gemini(menu_text)
             
-            # Cache the parsed menu
-            cache_menu(int(restaurant_id), menu_items)
+            # Cache the parsed menu and lunch hours
+            cache_menu(int(restaurant_id), menu_items, lunch_hours)
         else:
             logger.info("Using cached menu")
         
         # Get current time in EST
         est = pytz.timezone('US/Eastern')
         current_time = datetime.now(est)
-        current_hour = current_time.hour
         current_day = current_time.weekday()
         
         # Filter items based on time and criteria
@@ -387,7 +414,7 @@ async def recommend(
             
             # Check if lunch item is available
             if item['is_lunch_item']:
-                if current_day not in lunch_hours['days'] or not (lunch_hours['start'] <= current_hour < lunch_hours['end']):
+                if current_day not in lunch_hours['days'] or not is_within_lunch_hours(current_time, lunch_hours):
                     continue
             
             filtered_items.append(item)
