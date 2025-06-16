@@ -111,39 +111,25 @@ class ArgsModel(BaseModel):
         }
 
 class RecommendationRequest(BaseModel):
-    args: ArgsModel
+    args: Dict[str, Any]
 
-    class Config:
-        json_schema_extra = {
-            "type": "object",
-            "properties": {
-                "args": {
-                    "type": "object",
-                    "properties": {
-                        "category": {
-                            "type": "string",
-                            "description": "Optional category to filter menu items (e.g., 'Appetizers', 'Main Course')"
-                        },
-                        "price_range": {
-                            "type": "object",
-                            "properties": {
-                                "min": {
-                                    "type": "number",
-                                    "description": "Minimum price in the range"
-                                },
-                                "max": {
-                                    "type": "number",
-                                    "description": "Maximum price in the range"
-                                }
-                            },
-                            "required": ["min", "max"]
-                        }
-                    },
-                    "required": ["price_range"]
-                }
-            },
-            "required": ["args"]
-        }
+    @validator('args')
+    def validate_args(cls, v):
+        if not isinstance(v, dict):
+            raise ValueError("args must be a dictionary")
+        if 'price_range' not in v:
+            raise ValueError("price_range is required in args")
+        price_range = v['price_range']
+        if not isinstance(price_range, dict):
+            raise ValueError("price_range must be a dictionary")
+        if 'min' not in price_range or 'max' not in price_range:
+            raise ValueError("price_range must contain min and max values")
+        try:
+            float(price_range['min'])
+            float(price_range['max'])
+        except (TypeError, ValueError):
+            raise ValueError("price_range min and max must be numbers")
+        return v
 
 class RecommendationResponse(BaseModel):
     items: List[MenuItem]
@@ -518,8 +504,9 @@ async def recommend(request: Request, request_data: RecommendationRequest):
         logger.info(f"After time filtering: {len(time_filtered_menu)} items")
         
         # Extract arguments from request
-        category = request_data.args.category
-        price_range = request_data.args.price_range
+        args = request_data.args
+        category = args.get('category')
+        price_range = args['price_range']
         
         # Log the full request data for debugging
         logger.info(f"Full request data: {request_data.dict()}")
@@ -534,8 +521,8 @@ async def recommend(request: Request, request_data: RecommendationRequest):
         
         # Apply price range filter
         try:
-            min_price = price_range.min
-            max_price = price_range.max
+            min_price = float(price_range['min'])
+            max_price = float(price_range['max'])
             logger.info(f"Price range: ${min_price}-${max_price}")
             
             # Log some sample items before price filtering
