@@ -73,23 +73,8 @@ class ArgsModel(BaseModel):
 class RecommendationRequest(BaseModel):
     args: ArgsModel
 
-    @validator('args')
-    def validate_args(cls, v):
-        if not isinstance(v, dict):
-            raise ValueError("args must be a dictionary")
-        if 'price_range' not in v:
-            raise ValueError("price_range is required in args")
-        price_range = v['price_range']
-        if not isinstance(price_range, dict):
-            raise ValueError("price_range must be a dictionary")
-        if 'min' not in price_range or 'max' not in price_range:
-            raise ValueError("price_range must contain min and max values")
-        try:
-            float(price_range['min'])
-            float(price_range['max'])
-        except (TypeError, ValueError):
-            raise ValueError("price_range min and max must be numbers")
-        return v
+    class Config:
+        from_attributes = True
 
 class RecommendationResponse(BaseModel):
     items: List[MenuItem]
