@@ -96,34 +96,52 @@ def get_menu_text(restaurant_id: str) -> str:
 def extract_lunch_hours(menu_text):
     """Extract lunch hours from menu text."""
     try:
-        # Look for lunch hours pattern
-        lunch_pattern = r"Lunch\s+Hours:\s+(\d{1,2}:\d{2}\s*[AaPp][Mm])\s*-\s*(\d{1,2}:\d{2}\s*[AaPp][Mm])"
-        match = re.search(lunch_pattern, menu_text)
-        if match:
-            start_time = match.group(1).strip()
-            end_time = match.group(2).strip()
-            
-            # Convert to 24-hour format
-            start_dt = datetime.strptime(start_time, "%I:%M %p")
-            end_dt = datetime.strptime(end_time, "%I:%M %p")
-            
-            # Format as HH:MM
-            start_24 = start_dt.strftime("%H:%M")
-            end_24 = end_dt.strftime("%H:%M")
-            
-            # Extract days
-            days_pattern = r"Monday\s*-\s*Sunday"
-            days_match = re.search(days_pattern, menu_text)
-            days = list(range(7)) if days_match else []
-            
-            return {
-                "start": start_24,
-                "end": end_24,
-                "days": days
-            }
+        # Look for lunch hours pattern - handle both formats:
+        # "from 11:00 AM to 3:00 PM" and "11:00 AM - 3:00 PM"
+        lunch_patterns = [
+            r"from\s+(\d{1,2}:\d{2}\s*[AaPp][Mm])\s+to\s+(\d{1,2}:\d{2}\s*[AaPp][Mm])",
+            r"(\d{1,2}:\d{2}\s*[AaPp][Mm])\s*-\s*(\d{1,2}:\d{2}\s*[AaPp][Mm])"
+        ]
+        
+        for pattern in lunch_patterns:
+            match = re.search(pattern, menu_text, re.IGNORECASE)
+            if match:
+                start_time = match.group(1).strip()
+                end_time = match.group(2).strip()
+                
+                # Convert to 24-hour format
+                start_dt = datetime.strptime(start_time, "%I:%M %p")
+                end_dt = datetime.strptime(end_time, "%I:%M %p")
+                
+                # Format as HH:MM
+                start_24 = start_dt.strftime("%H:%M")
+                end_24 = end_dt.strftime("%H:%M")
+                
+                # Extract days - look for both formats:
+                # "Monday, Tuesday, Wednesday, Thursday, Friday" and "Monday-Friday"
+                days_patterns = [
+                    r"Monday,\s*Tuesday,\s*Wednesday,\s*Thursday,\s*Friday",
+                    r"Monday\s*-\s*Friday"
+                ]
+                
+                days = []
+                for days_pattern in days_patterns:
+                    if re.search(days_pattern, menu_text, re.IGNORECASE):
+                        days = list(range(5))  # 0-4 for Monday-Friday
+                        break
+                
+                logger.info(f"Extracted lunch hours: {start_24}-{end_24}, Days: {days}")
+                return {
+                    "start": start_24,
+                    "end": end_24,
+                    "days": days
+                }
+        
+        logger.warning("No lunch hours found in menu text")
+        return None
     except Exception as e:
         logger.error(f"Error extracting lunch hours: {str(e)}")
-    return None
+        return None
 
 def extract_lunch_days(text: str) -> List[int]:
     """Extract lunch days from menu text (0=Monday, 6=Sunday)"""
@@ -249,6 +267,57 @@ def cache_menu(restaurant_id: int, menu_items: List[Dict]):
     except Exception as e:
         logger.error(f"Error caching menu: {str(e)}")
 
+def extract_lunch_hours_with_gemini(menu_text: str) -> Optional[Dict]:
+    """Extract lunch hours using Gemini API."""
+    try:
+        # Configure Gemini API
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
+        
+        # Create prompt
+        prompt = f"""Extract lunch hours and days from this menu text. Return a JSON object with:
+- start: time in 24-hour format (HH:MM)
+- end: time in 24-hour format (HH:MM)
+- days: array of numbers (0=Monday through 6=Sunday)
+
+Example response:
+{{
+    "start": "11:00",
+    "end": "15:00",
+    "days": [0, 1, 2, 3, 4]
+}}
+
+Menu text:
+{menu_text}
+
+Return ONLY the JSON object, no other text or formatting."""
+
+        # Get response from Gemini
+        response = model.generate_content(prompt)
+        response_text = response.text.strip()
+        
+        # Remove markdown code block if present
+        if response_text.startswith('```json'):
+            response_text = response_text[7:]
+        if response_text.startswith('```'):
+            response_text = response_text[3:]
+        if response_text.endswith('```'):
+            response_text = response_text[:-3]
+        
+        # Parse JSON response
+        try:
+            lunch_hours = json.loads(response_text)
+            logger.info(f"Extracted lunch hours: {lunch_hours}")
+            return lunch_hours
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse lunch hours JSON: {str(e)}")
+            logger.error(f"Raw response: {response_text}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error extracting lunch hours with Gemini: {str(e)}")
+        return None
+
 # --- 6. API ENDPOINTS ---
 @app.get("/")
 async def root():
@@ -278,10 +347,13 @@ async def recommend(
         menu_items = get_cached_menu(int(restaurant_id))
         
         if not menu_items:
-            # Extract lunch hours and days
-            lunch_hours = extract_lunch_hours(menu_text)
-            lunch_days = extract_lunch_days(menu_text)
-            logger.info(f"Lunch hours: {lunch_hours}, Days: {lunch_days}")
+            # Extract lunch hours and days using Gemini
+            lunch_hours = extract_lunch_hours_with_gemini(menu_text)
+            if not lunch_hours:
+                logger.warning("Failed to extract lunch hours, defaulting to None")
+                lunch_hours = {"start": None, "end": None, "days": []}
+            
+            logger.info(f"Lunch hours: {lunch_hours}")
             
             # Parse menu with Gemini
             logger.info("Sending menu to Gemini for parsing")
@@ -315,7 +387,7 @@ async def recommend(
             
             # Check if lunch item is available
             if item['is_lunch_item']:
-                if current_day not in lunch_days or not (lunch_hours['start'] <= current_hour < lunch_hours['end']):
+                if current_day not in lunch_hours['days'] or not (lunch_hours['start'] <= current_hour < lunch_hours['end']):
                     continue
             
             filtered_items.append(item)
