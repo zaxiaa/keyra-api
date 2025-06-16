@@ -173,11 +173,11 @@ def parse_menu_with_gemini(menu_text: str) -> List[Dict]:
         
         # Create prompt
         prompt = f"""Parse this menu into a JSON array of items. Each item should have:
-- name: string
-- price: number
-- category: string
-- is_lunch_item: boolean
-- description: string or null
+- name: string (the item name, including any code like "A1." if present)
+- price: number (the price as a number, without the $ symbol)
+- lunch_price: number or null (if the item has a different lunch price)
+- category: string (the section name like "Appetizers", "Main Courses", etc.)
+- is_lunch_item: boolean (true if it's a lunch special or has a lunch price)
 
 Menu text:
 {menu_text}
@@ -361,80 +361,80 @@ async def recommend(
     restaurant_id: str = Query(..., description="Restaurant identifier to load menu from")
 ):
     try:
-        if not restaurant_id:
-            raise HTTPException(
-                status_code=400,
-                detail="restaurant_id is required as a query parameter"
-            )
-
-        # Get menu text from file
+        # Load menu
         menu_text = get_menu_text(restaurant_id)
         logger.info(f"Loaded menu for restaurant {restaurant_id}")
         
-        # Try to get cached menu and lunch hours
-        menu_items, lunch_hours = get_cached_menu(int(restaurant_id))
+        # Try to get cached menu
+        menu_items = get_cached_menu(int(restaurant_id))
         
         if not menu_items:
-            # Extract lunch hours and days using Gemini
-            lunch_hours = extract_lunch_hours_with_gemini(menu_text)
-            if not lunch_hours:
-                logger.warning("Failed to extract lunch hours, defaulting to None")
-                lunch_hours = {"start": None, "end": None, "days": []}
-            
-            logger.info(f"Lunch hours: {lunch_hours}")
-            
             # Parse menu with Gemini
             logger.info("Sending menu to Gemini for parsing")
             menu_items = parse_menu_with_gemini(menu_text)
             
-            # Cache the parsed menu and lunch hours
-            cache_menu(int(restaurant_id), menu_items, lunch_hours)
+            # Cache the parsed menu
+            cache_menu(int(restaurant_id), menu_items)
         else:
             logger.info("Using cached menu")
         
         # Get current time in EST
         est = pytz.timezone('US/Eastern')
         current_time = datetime.now(est)
+        current_hour = current_time.hour
         current_day = current_time.weekday()
         
-        # Filter items based on time and criteria
+        # Filter items based on category and price range
         filtered_items = []
         for item in menu_items:
-            # Check if item matches category
+            # Check category
             if request_data.args.get('category') and item['category'] != request_data.args['category']:
                 continue
                 
-            # Check if item matches price range
-            price_range = request_data.args.get('price_range', {})
-            if price_range:
-                min_price = price_range.get('min', 0)
-                max_price = price_range.get('max', float('inf'))
-                if not (min_price <= item['price'] <= max_price):
-                    continue
-            
-            # Check if lunch item is available
-            if item['is_lunch_item']:
-                if current_day not in lunch_hours['days'] or not is_within_lunch_hours(current_time, lunch_hours):
+            # Check price range
+            if request_data.args.get('price_range'):
+                price_range = request_data.args['price_range']
+                
+                # Use lunch price if available and it's lunch time
+                price = item.get('lunch_price') if (item.get('is_lunch_item') and 
+                                                  current_day < 5 and  # Monday-Friday
+                                                  11 <= current_hour < 15) else item['price']
+                
+                if price < price_range['min'] or price > price_range['max']:
                     continue
             
             filtered_items.append(item)
         
-        logger.info(f"Found {len(filtered_items)} items matching criteria")
-        
-        # Get recommendations
-        recommendations = get_recommendations_from_list_thirds(filtered_items)
-        logger.info(f"Generated {len(recommendations['items'])} recommendations")
-        
-        return recommendations
-        
+        # If we have filtered items, split into thirds and select one from each
+        if filtered_items:
+            sorted_items = sorted(filtered_items, key=lambda x: x.get('lunch_price', x['price']))
+            n = len(sorted_items)
+            
+            if n < 3:
+                recommendations = random.sample(sorted_items, k=n)
+            else:
+                third_size = n // 3
+                first_third = sorted_items[0:third_size]
+                second_third = sorted_items[third_size:2*third_size]
+                third_third = sorted_items[2*third_size:]
+                
+                recommendations = []
+                if first_third:
+                    recommendations.append(random.choice(first_third))
+                if second_third:
+                    recommendations.append(random.choice(second_third))
+                if third_third:
+                    recommendations.append(random.choice(third_third))
+            
+            return {"items": recommendations}
+        else:
+            return {"items": []}
+            
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error in recommendation endpoint: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- 7. FOR DEPLOYMENT ---
 if __name__ == "__main__":
