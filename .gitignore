@@ -44,6 +44,7 @@ Thumbs.db
 
 # Project-specific files to ignore
 *.txt
+!menus/*.txt
 *.md
 !README.md
 *.json

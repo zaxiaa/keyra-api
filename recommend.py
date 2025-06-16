@@ -1,14 +1,14 @@
 import re
 import json
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 import pytz
 import random
-import google.generativeai as genai  # Add Gemini integration
+import google.generativeai as genai
 import os
-from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
 
 # Configure Gemini
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -29,7 +29,8 @@ app = FastAPI(
     swagger_ui_parameters={"defaultModelsExpandDepth": -1}
 )
 
-# Configure maximum request size
+# Configure CORS
+from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -48,15 +49,32 @@ class MenuItem(BaseModel):
     price: float
     category: str
     is_lunch_item: bool
+    description: Optional[str] = None
 
 class RecommendationRequest(BaseModel):
-    menu_text: str  # Accept raw menu text
     args: Dict[str, Any]
 
 class RecommendationResponse(BaseModel):
     items: List[MenuItem]
 
-# --- 3. GEMINI MENU PARSER ---
+# --- 3. MENU FILE HANDLING ---
+MENU_DIR = Path("menus")
+
+def ensure_menu_dir():
+    """Ensure the menus directory exists"""
+    MENU_DIR.mkdir(exist_ok=True)
+
+def get_menu_text(restaurant_id: str) -> str:
+    """Read menu text from file"""
+    menu_file = MENU_DIR / f"{restaurant_id}.txt"
+    if not menu_file.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Menu not found for restaurant_id: {restaurant_id}"
+        )
+    return menu_file.read_text(encoding='utf-8')
+
+# --- 4. GEMINI MENU PARSER ---
 def parse_menu_with_gemini(text: str) -> list[dict]:
     """Uses Gemini to parse menu text into structured data"""
     prompt = f"""
@@ -65,6 +83,7 @@ def parse_menu_with_gemini(text: str) -> list[dict]:
 - price (convert to float)
 - category
 - is_lunch_item (true ONLY for lunch-specific items)
+- description (optional, for any additional info like "spicy" or "vegetarian")
 
 **Rules:**
 1. Track section headers (e.g., "Appetizers", "Lunch Specials") as categories
@@ -82,7 +101,8 @@ def parse_menu_with_gemini(text: str) -> list[dict]:
       "name": "Item Name",
       "price": 12.99,
       "category": "Category",
-      "is_lunch_item": false
+      "is_lunch_item": false,
+      "description": "Optional description"
     }}
   ]
 }}
@@ -111,9 +131,9 @@ def parse_menu_with_gemini(text: str) -> list[dict]:
             detail=f"Gemini API error: {str(e)}"
         )
 
-# --- 4. RECOMMENDATION LOGIC ---
+# --- 5. RECOMMENDATION LOGIC ---
 def get_recommendations_from_list_thirds(items: list[dict]) -> dict:
-    """Same as before"""
+    """Get recommendations by dividing items into thirds and selecting one from each"""
     if not items:
         return {"items": []}
 
@@ -139,7 +159,7 @@ def get_recommendations_from_list_thirds(items: list[dict]) -> dict:
         
     return {"items": recommendations}
 
-# --- 5. API ENDPOINTS ---
+# --- 6. API ENDPOINTS ---
 @app.get("/")
 async def root():
     return {"message": "Restaurant Recommendation API", "status": "running"}
@@ -149,9 +169,15 @@ async def health_check():
     return {"status": "healthy"}
 
 @app.post("/recommend", response_model=RecommendationResponse)
-async def recommend(request_data: RecommendationRequest):
+async def recommend(
+    request_data: RecommendationRequest,
+    restaurant_id: str = Query(..., description="Restaurant identifier to load menu from")
+):
+    # Get menu text from file
+    menu_text = get_menu_text(restaurant_id)
+    
     # Parse menu using Gemini
-    parsed_menu = parse_menu_with_gemini(request_data.menu_text)
+    parsed_menu = parse_menu_with_gemini(menu_text)
     
     # Time-based filtering
     tz = pytz.timezone('US/Eastern')
@@ -196,7 +222,8 @@ async def recommend(request_data: RecommendationRequest):
 
     return get_recommendations_from_list_thirds(candidate_items)
 
-# --- 6. FOR DEPLOYMENT ---
+# --- 7. FOR DEPLOYMENT ---
 if __name__ == "__main__":
+    ensure_menu_dir()  # Create menus directory if it doesn't exist
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
