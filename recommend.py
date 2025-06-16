@@ -179,21 +179,47 @@ def parse_menu_with_gemini(menu_text: str) -> List[Dict]:
         logger.info("Successfully configured Gemini API")
         
         # Construct prompt
-        prompt = f"""Parse this menu into a list of menu items. For each item, extract:
-1. name (string)
-2. price (float)
-3. category (string)
-4. is_lunch_item (boolean)
-5. lunch_price (float, if available)
+        prompt = f"""Parse this menu into a JSON array of menu items. Return ONLY the JSON array, no other text or code.
 
-Return the result as a JSON array of objects.
+Each item in the array should be an object with these fields:
+- name: string (the item name)
+- price: number (the price as a number, without the $ symbol)
+- category: string (the section name like "Appetizers", "Main Courses", etc.)
+- is_lunch_item: boolean (true if it's a lunch special or has a lunch price)
+- lunch_price: number or null (if the item has a different lunch price)
+
+Example format:
+[
+  {{
+    "name": "Egg Roll",
+    "price": 4.50,
+    "category": "Appetizers",
+    "is_lunch_item": false,
+    "lunch_price": null
+  }},
+  {{
+    "name": "Hunan Shrimp",
+    "price": 16.95,
+    "category": "Seafood",
+    "is_lunch_item": true,
+    "lunch_price": 11.95
+  }}
+]
 
 Menu text:
 {menu_text}"""
         
         # Get response from Gemini
         response = model.generate_content(prompt)
-        response_text = response.text
+        response_text = response.text.strip()
+        
+        # Remove markdown code block if present
+        if response_text.startswith('```json'):
+            response_text = response_text[7:]
+        if response_text.startswith('```'):
+            response_text = response_text[3:]
+        if response_text.endswith('```'):
+            response_text = response_text[:-3]
         
         # Parse response
         try:
