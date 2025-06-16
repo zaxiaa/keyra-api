@@ -387,27 +387,47 @@ async def recommend(
         # Filter items based on category and price range
         filtered_items = []
         for item in menu_items:
-            # Check category
-            if request_data.args.get('category') and item['category'] != request_data.args['category']:
-                continue
-                
-            # Check price range
-            if request_data.args.get('price_range'):
-                price_range = request_data.args['price_range']
-                
-                # Use lunch price if available and it's lunch time
-                price = item.get('lunch_price') if (item.get('is_lunch_item') and 
-                                                  current_day < 5 and  # Monday-Friday
-                                                  11 <= current_hour < 15) else item['price']
-                
-                if price < price_range['min'] or price > price_range['max']:
+            try:
+                # Check category
+                if request_data.args.get('category') and item.get('category') != request_data.args['category']:
                     continue
-            
-            filtered_items.append(item)
+                    
+                # Check price range
+                if request_data.args.get('price_range'):
+                    price_range = request_data.args['price_range']
+                    
+                    # Get the appropriate price based on time and availability
+                    price = item.get('price', float('inf'))
+                    if price is None:
+                        continue
+                        
+                    # Use lunch price if available and it's lunch time
+                    if (item.get('is_lunch_item', False) and 
+                        current_day < 5 and  # Monday-Friday
+                        11 <= current_hour < 15):
+                        lunch_price = item.get('lunch_price')
+                        if lunch_price is not None:
+                            price = lunch_price
+                    
+                    if price < price_range['min'] or price > price_range['max']:
+                        continue
+                
+                filtered_items.append(item)
+            except Exception as e:
+                logger.error(f"Error processing menu item: {str(e)}")
+                continue
         
         # If we have filtered items, split into thirds and select one from each
         if filtered_items:
-            sorted_items = sorted(filtered_items, key=lambda x: x.get('lunch_price', x['price']))
+            # Sort by price, using lunch price if available and it's lunch time
+            def get_price(item):
+                if (item.get('is_lunch_item', False) and 
+                    current_day < 5 and  # Monday-Friday
+                    11 <= current_hour < 15):
+                    return item.get('lunch_price', item.get('price', float('inf')))
+                return item.get('price', float('inf'))
+            
+            sorted_items = sorted(filtered_items, key=get_price)
             n = len(sorted_items)
             
             if n < 3:
