@@ -18,10 +18,16 @@ logger = logging.getLogger(__name__)
 # Configure Gemini
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
+    logger.error("GEMINI_API_KEY environment variable is not set")
     raise ValueError("GEMINI_API_KEY environment variable is not set")
 
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-pro')
+try:
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel('gemini-pro')
+    logger.info("Successfully configured Gemini API")
+except Exception as e:
+    logger.error(f"Failed to configure Gemini API: {str(e)}")
+    raise ValueError(f"Failed to configure Gemini API: {str(e)}")
 
 # --- 1. SETUP FASTAPI APP ---
 app = FastAPI(
@@ -73,11 +79,19 @@ def get_menu_text(restaurant_id: str) -> str:
     """Read menu text from file"""
     menu_file = MENU_DIR / f"{restaurant_id}.txt"
     if not menu_file.exists():
+        logger.error(f"Menu file not found: {menu_file}")
         raise HTTPException(
             status_code=404,
             detail=f"Menu not found for restaurant_id: {restaurant_id}"
         )
-    return menu_file.read_text(encoding='utf-8')
+    try:
+        return menu_file.read_text(encoding='utf-8')
+    except Exception as e:
+        logger.error(f"Failed to read menu file: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to read menu file: {str(e)}"
+        )
 
 def extract_lunch_hours(text: str) -> Tuple[int, int]:
     """Extract lunch hours from menu text"""
@@ -172,8 +186,15 @@ def parse_menu_with_gemini(text: str) -> list[dict]:
 **Menu to Parse:**
 {menu_section}
 """
-        response = model.generate_content(prompt)
-        logger.info("Received response from Gemini")
+        try:
+            response = model.generate_content(prompt)
+            logger.info("Received response from Gemini")
+        except Exception as e:
+            logger.error(f"Gemini API call failed: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to call Gemini API: {str(e)}"
+            )
         
         try:
             parsed = json.loads(response.text)
@@ -187,6 +208,8 @@ def parse_menu_with_gemini(text: str) -> list[dict]:
                 detail=f"Failed to parse menu: Invalid JSON response from Gemini"
             )
     
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error in menu parsing: {str(e)}")
         raise HTTPException(
@@ -250,69 +273,47 @@ async def recommend(
         # Extract lunch hours and days
         lunch_start, lunch_end = extract_lunch_hours(menu_text)
         lunch_days = extract_lunch_days(menu_text)
-        logger.info(f"Lunch hours: {lunch_start}-{lunch_end}, Days: {lunch_days}")
+        logger.info(f"Lunch hours: {lunch_start}:00-{lunch_end}:00, Days: {lunch_days}")
         
-        # Parse menu using Gemini
-        parsed_menu = parse_menu_with_gemini(menu_text)
+        # Parse menu with Gemini
+        menu_items = parse_menu_with_gemini(menu_text)
+        logger.info(f"Parsed {len(menu_items)} menu items")
         
-        # Time-based filtering
-        tz = pytz.timezone('US/Eastern')
-        now = datetime.now(tz)
-        is_lunch_hours = (now.weekday() in lunch_days) and (lunch_start <= now.hour < lunch_end)
-        logger.info(f"Current time: {now}, Is lunch hours: {is_lunch_hours}")
-
-        if is_lunch_hours:
-            time_filtered_menu = parsed_menu
-        else:
-            time_filtered_menu = [
-                item for item in parsed_menu 
-                if not item.get("is_lunch_item", False)
-            ]
-
-        # Extract arguments from request
-        args = request_data.args
-        if not args:
-            raise HTTPException(
-                status_code=400,
-                detail="args object is required in request body"
-            )
-
-        category = args.get('category')
-        price_range = args.get('price_range')
-        logger.info(f"Filtering by category: {category}, price range: {price_range}")
-
-        if not price_range:
-            raise HTTPException(
-                status_code=400,
-                detail="price_range is required in args"
-            )
-
-        # Filter by category
-        if category:
-            candidate_items = [
-                item for item in time_filtered_menu 
-                if category.lower() in item['category'].lower()
-            ]
-        else:
-            candidate_items = time_filtered_menu
+        # Get current time in EST
+        est = pytz.timezone('US/Eastern')
+        current_time = datetime.now(est)
+        current_hour = current_time.hour
+        current_day = current_time.weekday()
         
-        # Filter by price range
-        try:
-            min_price = float(price_range['min'])
-            max_price = float(price_range['max'])
-            candidate_items = [
-                item for item in candidate_items 
-                if min_price <= item.get("price", 0) <= max_price
-            ]
-        except (KeyError, TypeError, ValueError) as e:
-            logger.error(f"Invalid price range format: {str(e)}")
-            raise HTTPException(
-                status_code=400, 
-                detail="Invalid price_range format. Use {'min': number, 'max': number}"
-            )
-
-        logger.info(f"Found {len(candidate_items)} items matching criteria")
-        return get_recommendations_from_list_thirds(candidate_items)
+        # Filter items based on time and criteria
+        filtered_items = []
+        for item in menu_items:
+            # Check if item matches category
+            if request_data.args.get('category') and item['category'] != request_data.args['category']:
+                continue
+                
+            # Check if item matches price range
+            price_range = request_data.args.get('price_range', {})
+            if price_range:
+                min_price = price_range.get('min', 0)
+                max_price = price_range.get('max', float('inf'))
+                if not (min_price <= item['price'] <= max_price):
+                    continue
+            
+            # Check if lunch item is available
+            if item['is_lunch_item']:
+                if current_day not in lunch_days or not (lunch_start <= current_hour < lunch_end):
+                    continue
+            
+            filtered_items.append(item)
+        
+        logger.info(f"Found {len(filtered_items)} items matching criteria")
+        
+        # Get recommendations
+        recommendations = get_recommendations_from_list_thirds(filtered_items)
+        logger.info(f"Generated {len(recommendations['items'])} recommendations")
+        
+        return recommendations
         
     except HTTPException:
         raise
@@ -320,7 +321,7 @@ async def recommend(
         logger.error(f"Error in recommendation endpoint: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error processing recommendation: {str(e)}"
+            detail=f"Internal server error: {str(e)}"
         )
 
 # --- 7. FOR DEPLOYMENT ---
