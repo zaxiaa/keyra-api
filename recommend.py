@@ -2,7 +2,7 @@ import re
 import json
 import logging
 from fastapi import FastAPI, HTTPException, Query, Request, BackgroundTasks
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import Optional, Dict, Any, List, Tuple
 from datetime import datetime
 import pytz
@@ -68,6 +68,24 @@ class MenuItem(BaseModel):
 
 class RecommendationRequest(BaseModel):
     args: Dict[str, Any]
+
+    @validator('args')
+    def validate_args(cls, v):
+        if not isinstance(v, dict):
+            raise ValueError("args must be a dictionary")
+        if 'price_range' not in v:
+            raise ValueError("price_range is required in args")
+        price_range = v['price_range']
+        if not isinstance(price_range, dict):
+            raise ValueError("price_range must be a dictionary")
+        if 'min' not in price_range or 'max' not in price_range:
+            raise ValueError("price_range must contain min and max values")
+        try:
+            float(price_range['min'])
+            float(price_range['max'])
+        except (TypeError, ValueError):
+            raise ValueError("price_range min and max must be numbers")
+        return v
 
 class RecommendationResponse(BaseModel):
     items: List[MenuItem]
@@ -436,13 +454,16 @@ async def recommend(request_data: RecommendationRequest):
         else:
             time_filtered_menu = [item for item in menu_items if not item.get("is_lunch_item", False)]
         logger.info(f"After time filtering: {len(time_filtered_menu)} items")
-
+        
         # Extract arguments from request
         args = request_data.args
         category = args.get('category')
         price_range = args.get('price_range')
+        
+        # Log the full request data for debugging
+        logger.info(f"Full request data: {request_data.dict()}")
         logger.info(f"Request args - category: {category}, price_range: {price_range}")
-
+        
         # Filter by category first, if provided
         if category:
             candidate_items = [item for item in time_filtered_menu if category.lower() in item['category'].lower()]
@@ -450,6 +471,7 @@ async def recommend(request_data: RecommendationRequest):
         else:
             candidate_items = time_filtered_menu
         
+        # Apply price range filter
         try:
             min_price = float(price_range['min'])
             max_price = float(price_range['max'])
@@ -472,8 +494,9 @@ async def recommend(request_data: RecommendationRequest):
             
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error processing price range: {str(e)}")
+            logger.error(f"Price range value: {price_range}")
             raise HTTPException(status_code=400, detail=f"Invalid price_range format: {str(e)}")
-
+        
         # Pass the final list of candidates to the recommendation logic
         result = get_recommendations_from_list_thirds(candidate_items)
         logger.info(f"Final recommendations: {len(result['items'])} items")
