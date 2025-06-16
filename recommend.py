@@ -10,10 +10,14 @@ import random
 import google.generativeai as genai
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Load environment variables
+load_dotenv()
 
 # Configure cache directory
 CACHE_DIR = Path("cache")
@@ -28,7 +32,7 @@ if not GEMINI_API_KEY:
 
 try:
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
+    model = genai.GenerativeModel('gemini-pro')
     logger.info("Successfully configured Gemini API")
 except Exception as e:
     logger.error(f"Failed to configure Gemini API: {str(e)}")
@@ -109,38 +113,6 @@ class ArgsModel(BaseModel):
             },
             "required": ["price_range"]
         }
-
-class RecommendationRequest(BaseModel):
-    args: Dict[str, Any]
-
-    @validator('args')
-    def validate_args(cls, v):
-        if not isinstance(v, dict):
-            raise ValueError("args must be a dictionary")
-        if 'price_range' not in v:
-            raise ValueError("price_range is required in args")
-        
-        price_range = v['price_range']
-        # Handle case where price_range might be a string
-        if isinstance(price_range, str):
-            try:
-                price_range = json.loads(price_range)
-            except json.JSONDecodeError:
-                raise ValueError("price_range must be a valid JSON object")
-        
-        if not isinstance(price_range, dict):
-            raise ValueError("price_range must be a dictionary")
-        if 'min' not in price_range or 'max' not in price_range:
-            raise ValueError("price_range must contain min and max values")
-        try:
-            float(price_range['min'])
-            float(price_range['max'])
-        except (TypeError, ValueError):
-            raise ValueError("price_range min and max must be numbers")
-        
-        # Update the args with the parsed price_range
-        v['price_range'] = price_range
-        return v
 
 class RecommendationResponse(BaseModel):
     items: List[MenuItem]
@@ -248,7 +220,7 @@ def parse_menu_with_gemini(menu_text: str) -> List[Dict]:
             raise ValueError("GEMINI_API_KEY not set")
         
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
+        model = genai.GenerativeModel('gemini-pro')
         logger.info("Successfully configured Gemini API")
         
         # Construct prompt
@@ -399,7 +371,7 @@ def extract_lunch_hours_with_gemini(menu_text: str) -> Optional[Dict]:
     try:
         # Configure Gemini API
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
+        model = genai.GenerativeModel('gemini-pro')
         
         # Create prompt
         prompt = f"""Extract lunch hours and days from this menu text. Return a JSON object with:
@@ -482,11 +454,43 @@ async def health_check():
     return {"status": "healthy"}
 
 @app.post("/recommend", response_model=RecommendationResponse)
-async def recommend(request: Request, request_data: RecommendationRequest):
+async def recommend(request: Request):
     try:
-        # Log the raw request body
-        body = await request.body()
-        logger.info(f"Raw request body: {body.decode()}")
+        # Parse the request body
+        body = await request.json()
+        logger.info(f"Raw request body: {body}")
+        
+        # Validate the request structure
+        if not isinstance(body, dict):
+            raise HTTPException(status_code=400, detail="Request body must be a JSON object")
+        if 'args' not in body:
+            raise HTTPException(status_code=400, detail="args is required in request body")
+        if not isinstance(body['args'], dict):
+            raise HTTPException(status_code=400, detail="args must be a JSON object")
+        if 'price_range' not in body['args']:
+            raise HTTPException(status_code=400, detail="price_range is required in args")
+        
+        # Extract and validate price_range
+        price_range = body['args']['price_range']
+        if isinstance(price_range, str):
+            try:
+                price_range = json.loads(price_range)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="price_range must be a valid JSON object")
+        
+        if not isinstance(price_range, dict):
+            raise HTTPException(status_code=400, detail="price_range must be a JSON object")
+        if 'min' not in price_range or 'max' not in price_range:
+            raise HTTPException(status_code=400, detail="price_range must contain min and max values")
+        
+        try:
+            min_price = float(price_range['min'])
+            max_price = float(price_range['max'])
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="price_range min and max must be numbers")
+        
+        # Extract category
+        category = body['args'].get('category')
         
         # Load menu
         menu_text = get_menu_text(str(1))  # Assuming restaurant_id 1 for now
@@ -514,15 +518,6 @@ async def recommend(request: Request, request_data: RecommendationRequest):
             time_filtered_menu = [item for item in menu_items if not item.get("is_lunch_item", False)]
         logger.info(f"After time filtering: {len(time_filtered_menu)} items")
         
-        # Extract arguments from request
-        args = request_data.args
-        category = args.get('category')
-        price_range = args['price_range']
-        
-        # Log the full request data for debugging
-        logger.info(f"Full request data: {request_data.dict()}")
-        logger.info(f"Request args - category: {category}, price_range: {price_range}")
-        
         # Filter by category first, if provided
         if category:
             candidate_items = [item for item in time_filtered_menu if category.lower() in item['category'].lower()]
@@ -531,36 +526,31 @@ async def recommend(request: Request, request_data: RecommendationRequest):
             candidate_items = time_filtered_menu
         
         # Apply price range filter
-        try:
-            min_price = float(price_range['min'])
-            max_price = float(price_range['max'])
-            logger.info(f"Price range: ${min_price}-${max_price}")
-            
-            # Log some sample items before price filtering
-            if candidate_items:
-                logger.info("Sample items before price filtering:")
-                for item in candidate_items[:3]:
-                    logger.info(f"Item: {item.get('name')}, Price: ${item.get('price')}, Category: {item.get('category')}")
-            
-            candidate_items = [item for item in candidate_items if min_price <= item.get("price", 0) <= max_price]
-            logger.info(f"After price filtering: {len(candidate_items)} items")
-            
-            # Log some sample items after price filtering
-            if candidate_items:
-                logger.info("Sample items after price filtering:")
-                for item in candidate_items[:3]:
-                    logger.info(f"Item: {item.get('name')}, Price: ${item.get('price')}, Category: {item.get('category')}")
-            
-        except Exception as e:
-            logger.error(f"Error processing price range: {str(e)}")
-            logger.error(f"Price range value: {price_range}")
-            raise HTTPException(status_code=400, detail=f"Invalid price_range format: {str(e)}")
+        logger.info(f"Price range: ${min_price}-${max_price}")
+        
+        # Log some sample items before price filtering
+        if candidate_items:
+            logger.info("Sample items before price filtering:")
+            for item in candidate_items[:3]:
+                logger.info(f"Item: {item.get('name')}, Price: ${item.get('price')}, Category: {item.get('category')}")
+        
+        candidate_items = [item for item in candidate_items if min_price <= item.get("price", 0) <= max_price]
+        logger.info(f"After price filtering: {len(candidate_items)} items")
+        
+        # Log some sample items after price filtering
+        if candidate_items:
+            logger.info("Sample items after price filtering:")
+            for item in candidate_items[:3]:
+                logger.info(f"Item: {item.get('name')}, Price: ${item.get('price')}, Category: {item.get('category')}")
         
         # Pass the final list of candidates to the recommendation logic
         result = get_recommendations_from_list_thirds(candidate_items)
         logger.info(f"Final recommendations: {len(result['items'])} items")
         return result
         
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON decode error: {str(e)}")
+        raise HTTPException(status_code=400, detail="Invalid JSON in request body")
     except Exception as e:
         import traceback
         error_details = traceback.format_exc()
