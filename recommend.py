@@ -8,6 +8,7 @@ import pytz
 import random
 import google.generativeai as genai  # Add Gemini integration
 import os
+from fastapi.middleware.cors import CORSMiddleware
 
 # Configure Gemini
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -18,7 +19,24 @@ genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-2.5-pro')
 
 # --- 1. SETUP FASTAPI APP ---
-app = FastAPI(title="Restaurant Recommendation API", version="1.0.0")
+app = FastAPI(
+    title="Restaurant Recommendation API",
+    version="1.0.0",
+    # Increase payload size limit to 10MB
+    openapi_url="/openapi.json",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    swagger_ui_parameters={"defaultModelsExpandDepth": -1}
+)
+
+# Configure maximum request size
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- 2. PYDANTIC MODELS ---
 class PriceRange(BaseModel):
