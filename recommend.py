@@ -119,7 +119,15 @@ class RecommendationRequest(BaseModel):
             raise ValueError("args must be a dictionary")
         if 'price_range' not in v:
             raise ValueError("price_range is required in args")
+        
         price_range = v['price_range']
+        # Handle case where price_range might be a string
+        if isinstance(price_range, str):
+            try:
+                price_range = json.loads(price_range)
+            except json.JSONDecodeError:
+                raise ValueError("price_range must be a valid JSON object")
+        
         if not isinstance(price_range, dict):
             raise ValueError("price_range must be a dictionary")
         if 'min' not in price_range or 'max' not in price_range:
@@ -129,6 +137,9 @@ class RecommendationRequest(BaseModel):
             float(price_range['max'])
         except (TypeError, ValueError):
             raise ValueError("price_range min and max must be numbers")
+        
+        # Update the args with the parsed price_range
+        v['price_range'] = price_range
         return v
 
 class RecommendationResponse(BaseModel):
