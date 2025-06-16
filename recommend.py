@@ -66,8 +66,12 @@ class MenuItem(BaseModel):
     category: str
     is_lunch_item: bool
 
+class ArgsModel(BaseModel):
+    category: Optional[str] = None
+    price_range: PriceRange
+
 class RecommendationRequest(BaseModel):
-    args: Dict[str, Any]
+    args: ArgsModel
 
     @validator('args')
     def validate_args(cls, v):
@@ -456,9 +460,8 @@ async def recommend(request_data: RecommendationRequest):
         logger.info(f"After time filtering: {len(time_filtered_menu)} items")
         
         # Extract arguments from request
-        args = request_data.args
-        category = args.get('category')
-        price_range = args.get('price_range')
+        category = request_data.args.category
+        price_range = request_data.args.price_range
         
         # Log the full request data for debugging
         logger.info(f"Full request data: {request_data.dict()}")
@@ -473,8 +476,8 @@ async def recommend(request_data: RecommendationRequest):
         
         # Apply price range filter
         try:
-            min_price = float(price_range['min'])
-            max_price = float(price_range['max'])
+            min_price = price_range.min
+            max_price = price_range.max
             logger.info(f"Price range: ${min_price}-${max_price}")
             
             # Log some sample items before price filtering
@@ -492,7 +495,7 @@ async def recommend(request_data: RecommendationRequest):
                 for item in candidate_items[:3]:
                     logger.info(f"Item: {item.get('name')}, Price: ${item.get('price')}, Category: {item.get('category')}")
             
-        except (KeyError, TypeError, ValueError) as e:
+        except Exception as e:
             logger.error(f"Error processing price range: {str(e)}")
             logger.error(f"Price range value: {price_range}")
             raise HTTPException(status_code=400, detail=f"Invalid price_range format: {str(e)}")
