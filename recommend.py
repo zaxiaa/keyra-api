@@ -175,7 +175,7 @@ def parse_menu_with_gemini(menu_text: str) -> List[Dict]:
             raise ValueError("GEMINI_API_KEY not set")
         
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
         logger.info("Successfully configured Gemini API")
         
         # Construct prompt
