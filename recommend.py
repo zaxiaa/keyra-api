@@ -170,54 +170,51 @@ def extract_lunch_days(text: str) -> List[int]:
 def parse_menu_with_gemini(menu_text: str) -> List[Dict]:
     """Parse menu text using Gemini API."""
     try:
-        # Configure Gemini API
+        # Configure Gemini
+        if not GEMINI_API_KEY:
+            raise ValueError("GEMINI_API_KEY not set")
+        
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
+        model = genai.GenerativeModel('gemini-pro')
         logger.info("Successfully configured Gemini API")
         
-        # Create prompt
-        prompt = f"""Parse this menu into a JSON array of items. Each item should have:
-- name: string (the item name, including any code like "A1." if present)
-- price: number (the price as a number, without the $ symbol)
-- lunch_price: number or null (if the item has a different lunch price)
-- category: string (the section name like "Appetizers", "Main Courses", etc.)
-- is_lunch_item: boolean (true if it's a lunch special or has a lunch price)
+        # Construct prompt
+        prompt = f"""Parse this menu into a list of menu items. For each item, extract:
+1. name (string)
+2. price (float)
+3. category (string)
+4. is_lunch_item (boolean)
+5. lunch_price (float, if available)
+
+Return the result as a JSON array of objects.
 
 Menu text:
-{menu_text}
-
-Return ONLY the JSON array, no other text or formatting."""
-
+{menu_text}"""
+        
         # Get response from Gemini
         response = model.generate_content(prompt)
-        response_text = response.text.strip()
+        response_text = response.text
         
-        # Remove markdown code block if present
-        if response_text.startswith('```json'):
-            response_text = response_text[7:]
-        if response_text.startswith('```'):
-            response_text = response_text[3:]
-        if response_text.endswith('```'):
-            response_text = response_text[:-3]
-        
-        # Parse JSON response
+        # Parse response
         try:
-            parsed_response = json.loads(response_text)
-            if isinstance(parsed_response, dict) and 'menu' in parsed_response:
-                menu_items = parsed_response['menu']
-            else:
-                menu_items = parsed_response
-                
+            menu_items = json.loads(response_text)
             logger.info(f"Successfully parsed {len(menu_items)} menu items")
+            
+            # Log sample items
+            if menu_items:
+                logger.info("Sample parsed items:")
+                for item in menu_items[:3]:
+                    logger.info(f"Item: {item.get('name')}, Price: ${item.get('price')}, Category: {item.get('category')}")
+            
             return menu_items
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse Gemini response as JSON: {str(e)}")
+            logger.error(f"Error parsing Gemini response: {str(e)}")
             logger.error(f"Raw response: {response_text}")
-            raise HTTPException(status_code=500, detail="Failed to parse menu")
+            raise
             
     except Exception as e:
-        logger.error(f"Error calling Gemini API: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to call Gemini API: {str(e)}")
+        logger.error(f"Error in parse_menu_with_gemini: {str(e)}")
+        raise
 
 # --- 5. RECOMMENDATION LOGIC ---
 def get_recommendations_from_list_thirds(items: list[dict]) -> dict:
@@ -406,35 +403,60 @@ async def recommend(request_data: RecommendationRequest):
         tz = pytz.timezone('US/Eastern')
         now = datetime.now(tz)
         is_lunch_hours = (0 <= now.weekday() <= 4) and (11 <= now.hour < 15)
+        logger.info(f"Current time: {now}, is_lunch_hours: {is_lunch_hours}")
         
         if is_lunch_hours:
             time_filtered_menu = menu_items
         else:
             time_filtered_menu = [item for item in menu_items if not item.get("is_lunch_item", False)]
+        logger.info(f"After time filtering: {len(time_filtered_menu)} items")
 
         # Extract arguments from request
         args = request_data.args
         category = args.get('category')
         price_range = args.get('price_range')
+        logger.info(f"Request args - category: {category}, price_range: {price_range}")
 
         # Filter by category first, if provided
         if category:
             candidate_items = [item for item in time_filtered_menu if category.lower() in item['category'].lower()]
+            logger.info(f"After category filtering: {len(candidate_items)} items")
         else:
             candidate_items = time_filtered_menu
         
         try:
             min_price = float(price_range['min'])
             max_price = float(price_range['max'])
+            logger.info(f"Price range: ${min_price}-${max_price}")
+            
+            # Log some sample items before price filtering
+            if candidate_items:
+                logger.info("Sample items before price filtering:")
+                for item in candidate_items[:3]:
+                    logger.info(f"Item: {item.get('name')}, Price: ${item.get('price')}, Category: {item.get('category')}")
+            
             candidate_items = [item for item in candidate_items if min_price <= item.get("price", 0) <= max_price]
-        except (KeyError, TypeError, ValueError):
-            raise HTTPException(status_code=400, detail="Invalid price_range format.")
+            logger.info(f"After price filtering: {len(candidate_items)} items")
+            
+            # Log some sample items after price filtering
+            if candidate_items:
+                logger.info("Sample items after price filtering:")
+                for item in candidate_items[:3]:
+                    logger.info(f"Item: {item.get('name')}, Price: ${item.get('price')}, Category: {item.get('category')}")
+            
+        except (KeyError, TypeError, ValueError) as e:
+            logger.error(f"Error processing price range: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Invalid price_range format: {str(e)}")
 
         # Pass the final list of candidates to the recommendation logic
-        return get_recommendations_from_list_thirds(candidate_items)
+        result = get_recommendations_from_list_thirds(candidate_items)
+        logger.info(f"Final recommendations: {len(result['items'])} items")
+        return result
         
     except Exception as e:
-        logger.error(f"Error in recommendation endpoint: {str(e)}")
+        import traceback
+        error_details = traceback.format_exc()
+        logger.error(f"Error in recommendation endpoint: {str(e)}\n{error_details}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # --- 7. FOR DEPLOYMENT ---
