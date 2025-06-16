@@ -6,14 +6,17 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Install dependencies
+# Copy requirements first to leverage Docker cache
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip
+
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code and menu files
-COPY recommend.py .
-COPY menus/ ./menus/
+# Copy the rest of the application
+COPY . .
+
+# Create menus directory if it doesn't exist
+RUN mkdir -p menus
 
 # Create non-root user for security
 RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
