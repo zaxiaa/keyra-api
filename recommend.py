@@ -60,6 +60,21 @@ class PriceRange(BaseModel):
     min: float
     max: float
 
+    class Config:
+        json_schema_extra = {
+            "properties": {
+                "min": {
+                    "type": "number",
+                    "description": "Minimum price in the range"
+                },
+                "max": {
+                    "type": "number",
+                    "description": "Maximum price in the range"
+                }
+            },
+            "required": ["min", "max"]
+        }
+
 class MenuItem(BaseModel):
     name: str
     price: float
@@ -70,11 +85,65 @@ class ArgsModel(BaseModel):
     category: Optional[str] = None
     price_range: PriceRange
 
+    class Config:
+        json_schema_extra = {
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "description": "Optional category to filter menu items (e.g., 'Appetizers', 'Main Course')"
+                },
+                "price_range": {
+                    "type": "object",
+                    "properties": {
+                        "min": {
+                            "type": "number",
+                            "description": "Minimum price in the range"
+                        },
+                        "max": {
+                            "type": "number",
+                            "description": "Maximum price in the range"
+                        }
+                    },
+                    "required": ["min", "max"]
+                }
+            },
+            "required": ["price_range"]
+        }
+
 class RecommendationRequest(BaseModel):
     args: ArgsModel
 
     class Config:
-        from_attributes = True
+        json_schema_extra = {
+            "type": "object",
+            "properties": {
+                "args": {
+                    "type": "object",
+                    "properties": {
+                        "category": {
+                            "type": "string",
+                            "description": "Optional category to filter menu items (e.g., 'Appetizers', 'Main Course')"
+                        },
+                        "price_range": {
+                            "type": "object",
+                            "properties": {
+                                "min": {
+                                    "type": "number",
+                                    "description": "Minimum price in the range"
+                                },
+                                "max": {
+                                    "type": "number",
+                                    "description": "Maximum price in the range"
+                                }
+                            },
+                            "required": ["min", "max"]
+                        }
+                    },
+                    "required": ["price_range"]
+                }
+            },
+            "required": ["args"]
+        }
 
 class RecommendationResponse(BaseModel):
     items: List[MenuItem]
@@ -416,8 +485,12 @@ async def health_check():
     return {"status": "healthy"}
 
 @app.post("/recommend", response_model=RecommendationResponse)
-async def recommend(request_data: RecommendationRequest):
+async def recommend(request: Request, request_data: RecommendationRequest):
     try:
+        # Log the raw request body
+        body = await request.body()
+        logger.info(f"Raw request body: {body.decode()}")
+        
         # Load menu
         menu_text = get_menu_text(str(1))  # Assuming restaurant_id 1 for now
         if not menu_text:
