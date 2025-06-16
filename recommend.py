@@ -15,6 +15,11 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Configure cache directory
+CACHE_DIR = Path("cache")
+CACHE_DIR.mkdir(exist_ok=True)
+logger.info(f"Cache directory initialized at: {CACHE_DIR.absolute()}")
+
 # Configure Gemini
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
@@ -243,46 +248,36 @@ def get_recommendations_from_list_thirds(items: list[dict]) -> dict:
         
     return {"items": recommendations}
 
-# Add cache directory setup
-CACHE_DIR = Path("cache")
-CACHE_DIR.mkdir(exist_ok=True)
-
-def get_cached_menu(restaurant_id: int) -> Tuple[Optional[List[Dict]], Optional[Dict]]:
-    """Get cached menu and lunch hours for restaurant if they exist."""
+def get_cached_menu(restaurant_id: int) -> Optional[List[Dict]]:
+    """Get cached menu for restaurant if it exists."""
     cache_file = CACHE_DIR / f"menu_{restaurant_id}.json"
-    lunch_hours_file = CACHE_DIR / f"lunch_hours_{restaurant_id}.json"
-    
-    menu_items = None
-    lunch_hours = None
+    logger.info(f"Checking for cached menu at: {cache_file}")
     
     if cache_file.exists():
         try:
             with open(cache_file, 'r') as f:
                 menu_items = json.load(f)
+                logger.info(f"Successfully loaded cached menu with {len(menu_items)} items")
+                return menu_items
         except Exception as e:
             logger.error(f"Error reading menu cache: {str(e)}")
-            
-    if lunch_hours_file.exists():
-        try:
-            with open(lunch_hours_file, 'r') as f:
-                lunch_hours = json.load(f)
-        except Exception as e:
-            logger.error(f"Error reading lunch hours cache: {str(e)}")
-            
-    return menu_items, lunch_hours
+    else:
+        logger.info("No cached menu found")
+    return None
 
-def cache_menu(restaurant_id: int, menu_items: List[Dict], lunch_hours: Dict):
-    """Cache parsed menu items and lunch hours."""
+def cache_menu(restaurant_id: int, menu_items: List[Dict]):
+    """Cache parsed menu items."""
     cache_file = CACHE_DIR / f"menu_{restaurant_id}.json"
-    lunch_hours_file = CACHE_DIR / f"lunch_hours_{restaurant_id}.json"
+    logger.info(f"Attempting to cache menu to: {cache_file}")
     
     try:
         with open(cache_file, 'w') as f:
             json.dump(menu_items, f)
-        with open(lunch_hours_file, 'w') as f:
-            json.dump(lunch_hours, f)
+        logger.info(f"Successfully cached menu with {len(menu_items)} items")
     except Exception as e:
         logger.error(f"Error caching menu: {str(e)}")
+        logger.error(f"Cache directory exists: {CACHE_DIR.exists()}")
+        logger.error(f"Cache directory is writable: {os.access(CACHE_DIR, os.W_OK)}")
 
 def extract_lunch_hours_with_gemini(menu_text: str) -> Optional[Dict]:
     """Extract lunch hours using Gemini API."""
@@ -372,6 +367,7 @@ async def recommend(
             # Parse menu with Gemini
             logger.info("Sending menu to Gemini for parsing")
             menu_items = parse_menu_with_gemini(menu_text)
+            logger.info(f"Parsed {len(menu_items)} menu items")
             
             # Cache the parsed menu
             cache_menu(int(restaurant_id), menu_items)
