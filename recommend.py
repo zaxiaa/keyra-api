@@ -251,33 +251,46 @@ def get_recommendations_from_list_thirds(items: list[dict]) -> dict:
 def get_cached_menu(restaurant_id: int) -> Optional[List[Dict]]:
     """Get cached menu for restaurant if it exists."""
     cache_file = CACHE_DIR / f"menu_{restaurant_id}.json"
-    logger.info(f"Checking for cached menu at: {cache_file}")
+    logger.info(f"Checking for cached menu at: {cache_file.absolute()}")
     
-    if cache_file.exists():
-        try:
-            with open(cache_file, 'r') as f:
+    try:
+        if cache_file.exists():
+            with open(cache_file, 'r', encoding='utf-8') as f:
                 menu_items = json.load(f)
                 logger.info(f"Successfully loaded cached menu with {len(menu_items)} items")
                 return menu_items
-        except Exception as e:
-            logger.error(f"Error reading menu cache: {str(e)}")
-    else:
-        logger.info("No cached menu found")
-    return None
+        else:
+            logger.info(f"No cached menu found at {cache_file.absolute()}")
+            return None
+    except Exception as e:
+        logger.error(f"Error reading cache file {cache_file.absolute()}: {str(e)}")
+        return None
 
-def cache_menu(restaurant_id: int, menu_items: List[Dict]):
+def cache_menu(restaurant_id: int, menu_items: List[Dict]) -> None:
     """Cache parsed menu items."""
     cache_file = CACHE_DIR / f"menu_{restaurant_id}.json"
-    logger.info(f"Attempting to cache menu to: {cache_file}")
+    logger.info(f"Attempting to cache menu to: {cache_file.absolute()}")
     
     try:
-        with open(cache_file, 'w') as f:
-            json.dump(menu_items, f)
-        logger.info(f"Successfully cached menu with {len(menu_items)} items")
+        # Ensure cache directory exists
+        CACHE_DIR.mkdir(exist_ok=True)
+        logger.info(f"Cache directory exists at: {CACHE_DIR.absolute()}")
+        
+        # Write menu items to cache file
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(menu_items, f, indent=2)
+        
+        # Verify file was written
+        if cache_file.exists():
+            file_size = cache_file.stat().st_size
+            logger.info(f"Successfully cached menu with {len(menu_items)} items. File size: {file_size} bytes")
+        else:
+            logger.error(f"Cache file was not created at {cache_file.absolute()}")
     except Exception as e:
-        logger.error(f"Error caching menu: {str(e)}")
-        logger.error(f"Cache directory exists: {CACHE_DIR.exists()}")
-        logger.error(f"Cache directory is writable: {os.access(CACHE_DIR, os.W_OK)}")
+        logger.error(f"Error caching menu to {cache_file.absolute()}: {str(e)}")
+        # Log the full exception details
+        import traceback
+        logger.error(f"Full error details: {traceback.format_exc()}")
 
 def extract_lunch_hours_with_gemini(menu_text: str) -> Optional[Dict]:
     """Extract lunch hours using Gemini API."""
@@ -341,6 +354,22 @@ def is_within_lunch_hours(current_time: datetime, lunch_hours: Dict) -> bool:
     
     return lunch_hours['start'] <= current_time_str <= lunch_hours['end']
 
+def get_price(item: Dict) -> float:
+    """Get the appropriate price for an item based on current time."""
+    try:
+        # Default to dinner price if lunch price is not available
+        lunch_price = item.get('lunch_price')
+        dinner_price = item.get('price', 0.0)  # Default to 0.0 if price is missing
+        
+        # If it's a lunch item and we're in lunch hours, use lunch price
+        if item.get('is_lunch_item') and is_lunch_hours():
+            return float(lunch_price) if lunch_price is not None else dinner_price
+        
+        return float(dinner_price)
+    except (ValueError, TypeError):
+        logger.warning(f"Invalid price format for item: {item.get('name', 'Unknown')}")
+        return 0.0
+
 # --- 6. API ENDPOINTS ---
 @app.get("/")
 async def root():
@@ -393,17 +422,7 @@ async def recommend(
                     price_range = request_data.args['price_range']
                     
                     # Get the appropriate price based on time and availability
-                    price = item.get('price', float('inf'))
-                    if price is None:
-                        continue
-                        
-                    # Use lunch price if available and it's lunch time
-                    if (item.get('is_lunch_item', False) and 
-                        current_day < 5 and  # Monday-Friday
-                        11 <= current_hour < 15):
-                        lunch_price = item.get('lunch_price')
-                        if lunch_price is not None:
-                            price = lunch_price
+                    price = get_price(item)
                     
                     if price < price_range['min'] or price > price_range['max']:
                         continue
