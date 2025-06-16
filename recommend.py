@@ -6,6 +6,16 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime
 import pytz
 import random
+import google.generativeai as genai  # Add Gemini integration
+import os
+
+# Configure Gemini
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY environment variable is not set")
+
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 # --- 1. SETUP FASTAPI APP ---
 app = FastAPI(title="Restaurant Recommendation API", version="1.0.0")
@@ -22,14 +32,70 @@ class MenuItem(BaseModel):
     is_lunch_item: bool
 
 class RecommendationRequest(BaseModel):
-    menu: List[MenuItem]  # List of pre-parsed menu items
-    args: Dict[str, Any]  # Arguments including category and price_range
+    menu_text: str  # Accept raw menu text
+    args: Dict[str, Any]
 
 class RecommendationResponse(BaseModel):
     items: List[MenuItem]
 
-# --- 3. RECOMMENDATION LOGIC ---
+# --- 3. GEMINI MENU PARSER ---
+def parse_menu_with_gemini(text: str) -> list[dict]:
+    """Uses Gemini to parse menu text into structured data"""
+    prompt = f"""
+**Task:** Parse this restaurant menu into structured JSON data. Extract every menu item with:
+- name
+- price (convert to float)
+- category
+- is_lunch_item (true ONLY for lunch-specific items)
+
+**Rules:**
+1. Track section headers (e.g., "Appetizers", "Lunch Specials") as categories
+2. Set is_lunch_item=True if:
+   - Category contains "Lunch"
+   - Item name has "(Lunch)"
+   - Two prices exist (lunch/dinner)
+3. For multiple prices, create two items: "Item (Lunch)" and "Item (Dinner)"
+4. Split choice items (with "/") into separate items
+5. Skip items without prices
+6. Output ONLY valid JSON in this format:
+{{
+  "menu": [
+    {{
+      "name": "Item Name",
+      "price": 12.99,
+      "category": "Category",
+      "is_lunch_item": false
+    }}
+  ]
+}}
+
+**Menu to Parse:**
+{text}
+"""
+    try:
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                response_mime_type="application/json"
+            )
+        )
+        parsed = json.loads(response.text)
+        return parsed.get("menu", [])
+    
+    except (ValueError, json.JSONDecodeError, KeyError) as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Menu parsing failed: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Gemini API error: {str(e)}"
+        )
+
+# --- 4. RECOMMENDATION LOGIC ---
 def get_recommendations_from_list_thirds(items: list[dict]) -> dict:
+    """Same as before"""
     if not items:
         return {"items": []}
 
@@ -55,7 +121,7 @@ def get_recommendations_from_list_thirds(items: list[dict]) -> dict:
         
     return {"items": recommendations}
 
-# --- 4. API ENDPOINTS ---
+# --- 5. API ENDPOINTS ---
 @app.get("/")
 async def root():
     return {"message": "Restaurant Recommendation API", "status": "running"}
@@ -66,8 +132,8 @@ async def health_check():
 
 @app.post("/recommend", response_model=RecommendationResponse)
 async def recommend(request_data: RecommendationRequest):
-    # Convert Pydantic objects to dicts for processing
-    menu_items = [item.dict() for item in request_data.menu]
+    # Parse menu using Gemini
+    parsed_menu = parse_menu_with_gemini(request_data.menu_text)
     
     # Time-based filtering
     tz = pytz.timezone('US/Eastern')
@@ -75,10 +141,10 @@ async def recommend(request_data: RecommendationRequest):
     is_lunch_hours = (0 <= now.weekday() <= 4) and (11 <= now.hour < 15)
     
     if is_lunch_hours:
-        time_filtered_menu = menu_items
+        time_filtered_menu = parsed_menu
     else:
         time_filtered_menu = [
-            item for item in menu_items 
+            item for item in parsed_menu 
             if not item.get("is_lunch_item", False)
         ]
 
@@ -87,7 +153,7 @@ async def recommend(request_data: RecommendationRequest):
     category = args.get('category')
     price_range = args.get('price_range')
 
-    # Filter by category if provided
+    # Filter by category
     if category:
         candidate_items = [
             item for item in time_filtered_menu 
@@ -102,7 +168,7 @@ async def recommend(request_data: RecommendationRequest):
         max_price = float(price_range['max'])
         candidate_items = [
             item for item in candidate_items 
-            if min_price <= item["price"] <= max_price
+            if min_price <= item.get("price", 0) <= max_price
         ]
     except (KeyError, TypeError, ValueError):
         raise HTTPException(
@@ -112,7 +178,7 @@ async def recommend(request_data: RecommendationRequest):
 
     return get_recommendations_from_list_thirds(candidate_items)
 
-# --- 5. FOR DEPLOYMENT ---
+# --- 6. FOR DEPLOYMENT ---
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
