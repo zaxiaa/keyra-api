@@ -9,9 +9,9 @@
 # Hong Kong Palace Menu
 ## Appetizers
 
-- **A1.** Egg Roll (2) - $4.50  
-- **A2.** Vegetable Spring Roll (2) - $4.50  
-- **A3.** Green Onion Pancake - $4.50  
+- **A1.** Egg Roll (2) - $3.50  
+- **A2.** Vegetable Spring Roll (2) - $3.50  
+- **A3.** Green Onion Pancake - $8.95  
 - **A4.** Sesame Ball (6) - $9.95  
 - **A5.** Shrimp Tempura (4) - $9.95  
 - **A6.** Chengdu Zhongs Spring Dumpling - $9.95  (spicy & numb)
@@ -84,16 +84,16 @@
 | S24  | Fresh Squid w. Black Bean Sauce           |        | $18.95  |
 | S25  | Stir Fried Squid with Pickled Pepper      |        | $18.95  | (spicy)
 | S26  | Scallops with Hot Garlic Sauce            |        | $18.95  | (spicy)
-| S27  | Scallops with Vegetables                  |        | $18.95  | 
-| S28  | Scallops & Shrimp in Hot Garlic Sauce     |        | $18.95  | (spicy)
-| S29  | Seafood Combination                       |        | $18.95  |
-| S30  | Cumin Fish                                |        | $19.95  | (spicy & numb)
-| S31  | Triple Delight (Shrimp, beef, chicken & vegetables) | $18.95 |
-| S32  | Kung Pao Chicken and Shrimp               |        | $18.95  | (spicy)
-| S33  | Beef and Scallops                         |        | $18.95  |
-| S34  | Family Delight                            |        | $18.95  |
-| S35  | Kung Pao Triple Delight                   |        | $18.95  | (spicy)
-| S36  | Fish or Beef or Chicken with Vegetable in Peppery Broth | $19.95 | (spicy & numb)
+| S27  | Scallops with Vegetables                                   |        | $18.95  | 
+| S28  | Scallops & Shrimp in Hot Garlic Sauce                      |        | $18.95  | (spicy)
+| S29  | Seafood Combination                                        |        | $18.95  |
+| S30  | Cumin Fish                                                 |        | $19.95  | (spicy & numb)
+| S31  | Triple Delight (Shrimp, beef, chicken & vegetables)        |        | $18.95  |
+| S32  | Kung Pao Chicken and Shrimp                                |        | $18.95  | (spicy)
+| S33  | Beef and Scallops                                          |        | $18.95  |
+| S34  | Family Delight                                             |        | $18.95  |
+| S35  | Kung Pao Triple Delight                                    |        | $18.95  | (spicy)
+| S36  | Fish or Beef or Chicken with Vegetable in Peppery Broth    |        | $19.95  | (spicy & numb)
 
 ## Beef
 
@@ -161,6 +161,7 @@
 | V16  | Stir Fried Shanghai Green & Black Mushroom          |        | $14.95   |
 | V17  | Fried Spinach with Fresh Garlic                     |        | $14.95   |
 | V18  | Kung Pao Tofu                                       |        | $14.95   | (spicy)
+
 
 ## Poultry
 
@@ -233,12 +234,13 @@
 | 20  | Beef with Broccoli                | $10.95  |
 | 21  | Szechuan Beef                     | $10.95  |
 
+
 ## Drink
 Coke          - $2.00
-Diet Coke     - $2.00
-Ginger Ale    - $2.00
-Sprite        - $2.00
-Bottled Water - $1.50
+Diet Coke   -$2.00
+Ginger Ale  -$2.00
+Sprite          -$2.00
+Bottled Water -$1.5
 
 ## Side Order
 
@@ -247,7 +249,7 @@ Bottled Water - $1.50
 | White Rice                          | 大白米饭       | $3.50  | Small       |
 | Extra Mu Shu Pancake                | 木须饼         | $3.00  | One piece   |
 | Crispy Noodle                       | 面干           | $3.00  |             |
-| Extra General Tso's Sauce           | 左公汁         | $5.00  |             |
+| Extra General Tso’s Sauce           | 左公汁         | $5.00  |             |
 | Extra Sweet and Sour Sauce          | 甜酸汁         | $5.00  |             |
 | Extra Egg Foo Young Sauce           | 蓉蛋汁         | $5.00  |             |
 | Extra Brown Sauce                   | 酱油汁         | $5.00  |             |
@@ -265,4 +267,4 @@ Bottled Water - $1.50
 - Extra Egg $2.00
 - Extra Shrimp $3.00
 - Extra Mushrooms $2.00
-- Extra Vegetables $2.00 
+- Extra Vegetables $2.00
