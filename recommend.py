@@ -237,6 +237,12 @@ async def recommend(
     restaurant_id: str = Query(..., description="Restaurant identifier to load menu from")
 ):
     try:
+        if not restaurant_id:
+            raise HTTPException(
+                status_code=400,
+                detail="restaurant_id is required as a query parameter"
+            )
+
         # Get menu text from file
         menu_text = get_menu_text(restaurant_id)
         logger.info(f"Loaded menu for restaurant {restaurant_id}")
@@ -265,9 +271,21 @@ async def recommend(
 
         # Extract arguments from request
         args = request_data.args
+        if not args:
+            raise HTTPException(
+                status_code=400,
+                detail="args object is required in request body"
+            )
+
         category = args.get('category')
         price_range = args.get('price_range')
         logger.info(f"Filtering by category: {category}, price range: {price_range}")
+
+        if not price_range:
+            raise HTTPException(
+                status_code=400,
+                detail="price_range is required in args"
+            )
 
         # Filter by category
         if category:
@@ -296,6 +314,8 @@ async def recommend(
         logger.info(f"Found {len(candidate_items)} items matching criteria")
         return get_recommendations_from_list_thirds(candidate_items)
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error in recommendation endpoint: {str(e)}")
         raise HTTPException(
