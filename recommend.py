@@ -32,7 +32,7 @@ if not GEMINI_API_KEY:
 
 try:
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
     logger.info("Successfully configured Gemini API")
 except Exception as e:
     logger.error(f"Failed to configure Gemini API: {str(e)}")
@@ -220,7 +220,7 @@ def parse_menu_with_gemini(menu_text: str) -> List[Dict]:
             raise ValueError("GEMINI_API_KEY not set")
         
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
         logger.info("Successfully configured Gemini API")
         
         # Construct prompt
@@ -371,7 +371,7 @@ def extract_lunch_hours_with_gemini(menu_text: str) -> Optional[Dict]:
     try:
         # Configure Gemini API
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
         
         # Create prompt
         prompt = f"""Extract lunch hours and days from this menu text. Return a JSON object with:
