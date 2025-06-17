@@ -226,72 +226,132 @@ def calculate_item_total(item: OrderItem) -> float:
 async def root():
     return {"message": "Restaurant Business Operations API"}
 
+async def _check_business_hours(restaurant_id: str):
+    """Internal function to check business hours"""
+    store_hours = load_store_hours(restaurant_id)
+    current_time = get_current_time(store_hours.timezone)
+    current_day = get_day_name(current_time.weekday())
+    
+    if current_day not in store_hours.business_hours:
+        return {"is_in_business_hour": False, "message": "No business hours configured for this day"}
+    
+    day_hours = store_hours.business_hours[current_day]
+    
+    if day_hours.is_closed:
+        return {"is_in_business_hour": False, "message": "Restaurant is closed today"}
+    
+    is_open = is_time_in_business_hours(current_time.time(), day_hours)
+    
+    # Format business hours display
+    if day_hours.periods:
+        hours_display = ", ".join([f"{p.open_time} - {p.close_time}" for p in day_hours.periods])
+    else:
+        hours_display = f"{day_hours.open_time} - {day_hours.close_time}"
+    
+    return {
+        "is_in_business_hour": is_open,
+        "current_time": current_time.strftime("%H:%M"),
+        "business_hours": hours_display,
+        "day": current_day.title()
+    }
+
 @app.get("/is-in-business-hour")
 async def is_in_business_hour(restaurant_id: str = Query(..., description="Restaurant ID")):
     """Check if restaurant is currently in business hours"""
     try:
-        store_hours = load_store_hours(restaurant_id)
-        current_time = get_current_time(store_hours.timezone)
-        current_day = get_day_name(current_time.weekday())
-        
-        if current_day not in store_hours.business_hours:
-            return {"is_in_business_hour": False, "message": "No business hours configured for this day"}
-        
-        day_hours = store_hours.business_hours[current_day]
-        
-        if day_hours.is_closed:
-            return {"is_in_business_hour": False, "message": "Restaurant is closed today"}
-        
-        is_open = is_time_in_business_hours(current_time.time(), day_hours)
-        
-        # Format business hours display
-        if day_hours.periods:
-            hours_display = ", ".join([f"{p.open_time} - {p.close_time}" for p in day_hours.periods])
-        else:
-            hours_display = f"{day_hours.open_time} - {day_hours.close_time}"
-        
-        return {
-            "is_in_business_hour": is_open,
-            "current_time": current_time.strftime("%H:%M"),
-            "business_hours": hours_display,
-            "day": current_day.title()
-        }
-        
+        return await _check_business_hours(restaurant_id)
     except Exception as e:
         logger.error(f"Error checking business hours: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to check business hours")
+
+@app.post("/is-in-business-hour")
+async def is_in_business_hour_post(restaurant_id: str = Query(..., description="Restaurant ID")):
+    """Check if restaurant is currently in business hours (POST method)"""
+    try:
+        return await _check_business_hours(restaurant_id)
+    except Exception as e:
+        logger.error(f"Error checking business hours: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to check business hours")
+
+@app.post("/is_in_business_hours")
+async def is_in_business_hours_post(restaurant_id: str = Query(..., description="Restaurant ID")):
+    """Check if restaurant is currently in business hours (POST alias for external systems)"""
+    try:
+        return await _check_business_hours(restaurant_id)
+    except Exception as e:
+        logger.error(f"Error checking business hours: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to check business hours")
+
+@app.get("/is_in_business_hours")
+async def is_in_business_hours_get(restaurant_id: str = Query(..., description="Restaurant ID")):
+    """Check if restaurant is currently in business hours (GET alias for external systems)"""
+    try:
+        return await _check_business_hours(restaurant_id)
+    except Exception as e:
+        logger.error(f"Error checking business hours: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to check business hours")
+
+async def _check_lunch_hours(restaurant_id: str):
+    """Internal function to check lunch hours"""
+    store_hours = load_store_hours(restaurant_id)
+    current_time = get_current_time(store_hours.timezone)
+    current_day = get_day_name(current_time.weekday())
+    
+    if not store_hours.lunch_hours or current_day not in store_hours.lunch_hours:
+        return {"is_in_lunch_hour": False, "message": "No lunch hours configured for this day"}
+    
+    day_lunch_hours = store_hours.lunch_hours[current_day]
+    
+    if day_lunch_hours.is_closed:
+        return {"is_in_lunch_hour": False, "message": "No lunch service today"}
+    
+    is_lunch_time = is_time_in_business_hours(current_time.time(), day_lunch_hours)
+    
+    # Format lunch hours display
+    if day_lunch_hours.periods:
+        lunch_hours_display = ", ".join([f"{p.open_time} - {p.close_time}" for p in day_lunch_hours.periods])
+    else:
+        lunch_hours_display = f"{day_lunch_hours.open_time} - {day_lunch_hours.close_time}"
+    
+    return {
+        "is_in_lunch_hour": is_lunch_time,
+        "current_time": current_time.strftime("%H:%M"),
+        "lunch_hours": lunch_hours_display,
+        "day": current_day.title()
+    }
 
 @app.get("/is-in-lunch-hour")
 async def is_in_lunch_hour(restaurant_id: str = Query(..., description="Restaurant ID")):
     """Check if restaurant is currently in lunch hours"""
     try:
-        store_hours = load_store_hours(restaurant_id)
-        current_time = get_current_time(store_hours.timezone)
-        current_day = get_day_name(current_time.weekday())
-        
-        if not store_hours.lunch_hours or current_day not in store_hours.lunch_hours:
-            return {"is_in_lunch_hour": False, "message": "No lunch hours configured for this day"}
-        
-        day_lunch_hours = store_hours.lunch_hours[current_day]
-        
-        if day_lunch_hours.is_closed:
-            return {"is_in_lunch_hour": False, "message": "No lunch service today"}
-        
-        is_lunch_time = is_time_in_business_hours(current_time.time(), day_lunch_hours)
-        
-        # Format lunch hours display
-        if day_lunch_hours.periods:
-            lunch_hours_display = ", ".join([f"{p.open_time} - {p.close_time}" for p in day_lunch_hours.periods])
-        else:
-            lunch_hours_display = f"{day_lunch_hours.open_time} - {day_lunch_hours.close_time}"
-        
-        return {
-            "is_in_lunch_hour": is_lunch_time,
-            "current_time": current_time.strftime("%H:%M"),
-            "lunch_hours": lunch_hours_display,
-            "day": current_day.title()
-        }
-        
+        return await _check_lunch_hours(restaurant_id)
+    except Exception as e:
+        logger.error(f"Error checking lunch hours: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to check lunch hours")
+
+@app.post("/is-in-lunch-hour")
+async def is_in_lunch_hour_post(restaurant_id: str = Query(..., description="Restaurant ID")):
+    """Check if restaurant is currently in lunch hours (POST method)"""
+    try:
+        return await _check_lunch_hours(restaurant_id)
+    except Exception as e:
+        logger.error(f"Error checking lunch hours: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to check lunch hours")
+
+@app.post("/is_in_lunch_hours")
+async def is_in_lunch_hours_post(restaurant_id: str = Query(..., description="Restaurant ID")):
+    """Check if restaurant is currently in lunch hours (POST alias for external systems)"""
+    try:
+        return await _check_lunch_hours(restaurant_id)
+    except Exception as e:
+        logger.error(f"Error checking lunch hours: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to check lunch hours")
+
+@app.get("/is_in_lunch_hours")
+async def is_in_lunch_hours_get(restaurant_id: str = Query(..., description="Restaurant ID")):
+    """Check if restaurant is currently in lunch hours (GET alias for external systems)"""
+    try:
+        return await _check_lunch_hours(restaurant_id)
     except Exception as e:
         logger.error(f"Error checking lunch hours: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to check lunch hours")
