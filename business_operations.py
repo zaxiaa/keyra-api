@@ -226,6 +226,19 @@ def calculate_item_total(item: OrderItem) -> float:
 async def root():
     return {"message": "Restaurant Business Operations API"}
 
+@app.get("/debug/endpoints")
+async def list_endpoints():
+    """Debug endpoint to list all registered routes"""
+    routes = []
+    for route in app.routes:
+        if hasattr(route, 'methods') and hasattr(route, 'path'):
+            routes.append({
+                "path": route.path,
+                "methods": list(route.methods),
+                "name": getattr(route, 'name', 'Unknown')
+            })
+    return {"registered_endpoints": routes}
+
 async def _check_business_hours(restaurant_id: str):
     """Internal function to check business hours"""
     store_hours = load_store_hours(restaurant_id)
