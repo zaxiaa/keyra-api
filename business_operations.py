@@ -38,11 +38,19 @@ TAX_RATE = 0.06
 
 # --- PYDANTIC MODELS ---
 
-class BusinessHours(BaseModel):
-    """Business hours for a specific day"""
+class TimePeriod(BaseModel):
+    """A single time period"""
     open_time: str  # Format: "HH:MM" (24-hour)
     close_time: str  # Format: "HH:MM" (24-hour)
+
+class BusinessHours(BaseModel):
+    """Business hours for a specific day"""
+    periods: Optional[List[TimePeriod]] = None
     is_closed: bool = False
+    
+    # Backward compatibility for old format
+    open_time: Optional[str] = None
+    close_time: Optional[str] = None
 
 class StoreHours(BaseModel):
     """Complete store hours configuration"""
@@ -92,25 +100,45 @@ def load_store_hours(restaurant_id: str) -> StoreHours:
     file_path = get_store_hours_file(restaurant_id)
     
     if not file_path.exists():
-        # Create default hours (9 AM - 9 PM, lunch 11 AM - 3 PM)
+        # Create default hours with split periods (lunch 11-3, dinner 5-10, closed 3-5)
         default_hours = StoreHours(
             business_hours={
-                "monday": BusinessHours(open_time="09:00", close_time="21:00"),
-                "tuesday": BusinessHours(open_time="09:00", close_time="21:00"),
-                "wednesday": BusinessHours(open_time="09:00", close_time="21:00"),
-                "thursday": BusinessHours(open_time="09:00", close_time="21:00"),
-                "friday": BusinessHours(open_time="09:00", close_time="21:00"),
-                "saturday": BusinessHours(open_time="10:00", close_time="22:00"),
-                "sunday": BusinessHours(open_time="10:00", close_time="20:00"),
+                "monday": BusinessHours(periods=[
+                    TimePeriod(open_time="11:00", close_time="15:00"),
+                    TimePeriod(open_time="17:00", close_time="22:00")
+                ]),
+                "tuesday": BusinessHours(periods=[
+                    TimePeriod(open_time="11:00", close_time="15:00"),
+                    TimePeriod(open_time="17:00", close_time="22:00")
+                ]),
+                "wednesday": BusinessHours(periods=[
+                    TimePeriod(open_time="11:00", close_time="15:00"),
+                    TimePeriod(open_time="17:00", close_time="22:00")
+                ]),
+                "thursday": BusinessHours(periods=[
+                    TimePeriod(open_time="11:00", close_time="15:00"),
+                    TimePeriod(open_time="17:00", close_time="22:00")
+                ]),
+                "friday": BusinessHours(periods=[
+                    TimePeriod(open_time="11:00", close_time="15:00"),
+                    TimePeriod(open_time="17:00", close_time="22:00")
+                ]),
+                "saturday": BusinessHours(periods=[
+                    TimePeriod(open_time="11:00", close_time="15:00"),
+                    TimePeriod(open_time="17:00", close_time="22:00")
+                ]),
+                "sunday": BusinessHours(periods=[
+                    TimePeriod(open_time="12:00", close_time="21:00")
+                ]),
             },
             lunch_hours={
-                "monday": BusinessHours(open_time="11:00", close_time="15:00"),
-                "tuesday": BusinessHours(open_time="11:00", close_time="15:00"),
-                "wednesday": BusinessHours(open_time="11:00", close_time="15:00"),
-                "thursday": BusinessHours(open_time="11:00", close_time="15:00"),
-                "friday": BusinessHours(open_time="11:00", close_time="15:00"),
-                "saturday": BusinessHours(open_time="11:00", close_time="15:00"),
-                "sunday": BusinessHours(is_closed=True, open_time="00:00", close_time="00:00"),
+                "monday": BusinessHours(periods=[TimePeriod(open_time="11:00", close_time="15:00")]),
+                "tuesday": BusinessHours(periods=[TimePeriod(open_time="11:00", close_time="15:00")]),
+                "wednesday": BusinessHours(periods=[TimePeriod(open_time="11:00", close_time="15:00")]),
+                "thursday": BusinessHours(periods=[TimePeriod(open_time="11:00", close_time="15:00")]),
+                "friday": BusinessHours(periods=[TimePeriod(open_time="11:00", close_time="15:00")]),
+                "saturday": BusinessHours(periods=[TimePeriod(open_time="11:00", close_time="15:00")]),
+                "sunday": BusinessHours(periods=[TimePeriod(open_time="12:00", close_time="15:00")]),
             },
             timezone="America/New_York"
         )
@@ -158,6 +186,24 @@ def time_in_range(current_time: time, start_time: str, end_time: str) -> bool:
     except Exception:
         return False
 
+def is_time_in_business_hours(current_time: time, business_hours: BusinessHours) -> bool:
+    """Check if current time is within business hours (supports multiple periods)"""
+    if business_hours.is_closed:
+        return False
+    
+    # Handle new format with multiple periods
+    if business_hours.periods:
+        for period in business_hours.periods:
+            if time_in_range(current_time, period.open_time, period.close_time):
+                return True
+        return False
+    
+    # Backward compatibility with old format
+    if business_hours.open_time and business_hours.close_time:
+        return time_in_range(current_time, business_hours.open_time, business_hours.close_time)
+    
+    return False
+
 def get_day_name(weekday: int) -> str:
     """Convert weekday number to day name"""
     days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
@@ -196,12 +242,18 @@ async def is_in_business_hour(restaurant_id: str = Query(..., description="Resta
         if day_hours.is_closed:
             return {"is_in_business_hour": False, "message": "Restaurant is closed today"}
         
-        is_open = time_in_range(current_time.time(), day_hours.open_time, day_hours.close_time)
+        is_open = is_time_in_business_hours(current_time.time(), day_hours)
+        
+        # Format business hours display
+        if day_hours.periods:
+            hours_display = ", ".join([f"{p.open_time} - {p.close_time}" for p in day_hours.periods])
+        else:
+            hours_display = f"{day_hours.open_time} - {day_hours.close_time}"
         
         return {
             "is_in_business_hour": is_open,
             "current_time": current_time.strftime("%H:%M"),
-            "business_hours": f"{day_hours.open_time} - {day_hours.close_time}",
+            "business_hours": hours_display,
             "day": current_day.title()
         }
         
@@ -225,12 +277,18 @@ async def is_in_lunch_hour(restaurant_id: str = Query(..., description="Restaura
         if day_lunch_hours.is_closed:
             return {"is_in_lunch_hour": False, "message": "No lunch service today"}
         
-        is_lunch_time = time_in_range(current_time.time(), day_lunch_hours.open_time, day_lunch_hours.close_time)
+        is_lunch_time = is_time_in_business_hours(current_time.time(), day_lunch_hours)
+        
+        # Format lunch hours display
+        if day_lunch_hours.periods:
+            lunch_hours_display = ", ".join([f"{p.open_time} - {p.close_time}" for p in day_lunch_hours.periods])
+        else:
+            lunch_hours_display = f"{day_lunch_hours.open_time} - {day_lunch_hours.close_time}"
         
         return {
             "is_in_lunch_hour": is_lunch_time,
             "current_time": current_time.strftime("%H:%M"),
-            "lunch_hours": f"{day_lunch_hours.open_time} - {day_lunch_hours.close_time}",
+            "lunch_hours": lunch_hours_display,
             "day": current_day.title()
         }
         
@@ -319,4 +377,4 @@ async def update_store_hours(restaurant_id: str, store_hours: StoreHours):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
