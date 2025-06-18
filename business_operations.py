@@ -268,15 +268,6 @@ async def _check_business_hours(restaurant_id: str):
         "day": current_day.title()
     }
 
-@app.get("/is_in_business_hour")
-async def is_in_business_hour(restaurant_id: str = Query(..., description="Restaurant ID")):
-    """Check if restaurant is currently in business hours"""
-    try:
-        return await _check_business_hours(restaurant_id)
-    except Exception as e:
-        logger.error(f"Error checking business hours: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to check business hours")
-
 @app.post("/is_in_business_hour")
 async def is_in_business_hour_post(restaurant_id: str = Query(..., description="Restaurant ID")):
     """Check if restaurant is currently in business hours (POST method)"""
@@ -316,15 +307,6 @@ async def _check_lunch_hours(restaurant_id: str):
         "lunch_hours": lunch_hours_display,
         "day": current_day.title()
     }
-
-@app.get("/is_in_lunch_hour")
-async def is_in_lunch_hour(restaurant_id: str = Query(..., description="Restaurant ID")):
-    """Check if restaurant is currently in lunch hours"""
-    try:
-        return await _check_lunch_hours(restaurant_id)
-    except Exception as e:
-        logger.error(f"Error checking lunch hours: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to check lunch hours")
 
 @app.post("/is_in_lunch_hour")
 async def is_in_lunch_hour_post(restaurant_id: str = Query(..., description="Restaurant ID")):
