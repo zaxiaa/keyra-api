@@ -277,6 +277,15 @@ async def is_in_business_hour(restaurant_id: str = Query(..., description="Resta
         logger.error(f"Error checking business hours: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to check business hours")
 
+@app.post("/is_in_business_hour")
+async def is_in_business_hour_post_underscore(restaurant_id: str = Query(..., description="Restaurant ID")):
+    """Check if restaurant is currently in business hours (POST method - singular underscore format)"""
+    try:
+        return await _check_business_hours(restaurant_id)
+    except Exception as e:
+        logger.error(f"Error checking business hours: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to check business hours")
+
 @app.post("/is-in-business-hour")
 async def is_in_business_hour_post(restaurant_id: str = Query(..., description="Restaurant ID")):
     """Check if restaurant is currently in business hours (POST method)"""
