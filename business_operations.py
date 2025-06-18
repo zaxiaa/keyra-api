@@ -1,11 +1,17 @@
 import json
 import logging
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Depends
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime, time
 import pytz
 from pathlib import Path
+
+# Database imports
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey, JSON
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship, Session
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -28,6 +34,40 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Database setup
+Base = declarative_base()
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./restaurant.db")
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def get_db():
+    """Get database session"""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# Database models
+class Customer(Base):
+    __tablename__ = "customers"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    phone_number = Column(String(20), unique=True, index=True, nullable=False)
+    name = Column(String(100), nullable=True)
+    email = Column(String(100), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_call_at = Column(DateTime, nullable=True)
+    preferred_pickup_time = Column(String(10), nullable=True)
+    notes = Column(Text, nullable=True)
+
+# Initialize database on startup
+@app.on_event("startup")
+async def startup_event():
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database tables created/verified")
 
 # Data directory for storing business hours
 DATA_DIR = Path("data")
@@ -89,7 +129,70 @@ class OrderTotalResponse(BaseModel):
     total: float
     item_breakdown: List[Dict[str, Any]]
 
+class DynamicVariablesResponse(BaseModel):
+    """Response containing all dynamic variables for Retell"""
+    # Business status
+    is_in_business_hour: bool
+    is_lunch_hour: bool
+    
+    # Time information
+    current_eastern_time: str
+    pickup_time: str
+    
+    # Customer information
+    customer_name: str
+    customer_phone_number: str
+    
+    # Additional context
+    greeting_context: str  # "new_customer" or "returning_customer"
+    business_hours_message: str
+    lunch_hours_message: str
+
 # --- HELPER FUNCTIONS ---
+
+async def lookup_or_create_customer(phone_number: str, db: Session) -> Customer:
+    """Look up existing customer or create new one"""
+    # Clean phone number (remove non-digits)
+    clean_phone = ''.join(filter(str.isdigit, phone_number))
+    
+    # Try to find existing customer
+    customer = db.query(Customer).filter(Customer.phone_number == clean_phone).first()
+    
+    if customer:
+        # Update last call time
+        customer.last_call_at = datetime.utcnow()
+        db.commit()
+        return customer
+    else:
+        # Create new customer
+        new_customer = Customer(
+            phone_number=clean_phone,
+            last_call_at=datetime.utcnow()
+        )
+        db.add(new_customer)
+        db.commit()
+        db.refresh(new_customer)
+        return new_customer
+
+def get_current_time_eastern() -> datetime:
+    """Get current time in Eastern timezone"""
+    eastern = pytz.timezone('America/New_York')
+    return datetime.now(eastern)
+
+def format_time_for_voice(dt: datetime) -> str:
+    """Format time in a voice-friendly way"""
+    return dt.strftime("%A, %B %d at %I:%M %p")
+
+def calculate_pickup_time(preferred_time: Optional[str] = None) -> str:
+    """Calculate pickup time based on customer preference or default"""
+    current_time = get_current_time_eastern()
+    
+    if preferred_time and preferred_time.upper() != "ASAP":
+        return preferred_time
+    
+    # Default: 20-25 minutes from now
+    pickup_dt = current_time.replace(minute=current_time.minute + 22)
+    return pickup_dt.strftime("%I:%M %p")
 
 def get_store_hours_file(restaurant_id: str) -> Path:
     """Get the file path for store hours"""
@@ -198,7 +301,7 @@ def is_time_in_business_hours(current_time: time, business_hours: BusinessHours)
                 return True
         return False
     
-    # Backward compatibility with old format
+    # Handle old format for backward compatibility
     if business_hours.open_time and business_hours.close_time:
         return time_in_range(current_time, business_hours.open_time, business_hours.close_time)
     
@@ -268,16 +371,116 @@ async def _check_business_hours(restaurant_id: str):
         "day": current_day.title()
     }
 
-@app.post("/is_in_business_hour")
-async def is_in_business_hour_post(restaurant_id: str = Query(..., description="Restaurant ID")):
-    """Check if restaurant is currently in business hours (POST method)"""
+@app.post("/is_in_business_hour", response_model=DynamicVariablesResponse)
+async def is_in_business_hour_post(
+    restaurant_id: str = Query(..., description="Restaurant ID"),
+    phone_number: Optional[str] = Query(None, description="Customer phone number for lookup"),
+    db: Session = Depends(get_db)
+):
+    """Enhanced business hours check with customer lookup and dynamic variables"""
     try:
-        return await _check_business_hours(restaurant_id)
+        # Get current time in Eastern timezone
+        current_time = get_current_time_eastern()
+        current_day = get_day_name(current_time.weekday())
+        
+        # Load business hours
+        store_hours = load_store_hours(restaurant_id)
+        
+        # Customer lookup if phone number provided
+        customer = None
+        customer_name = ""
+        customer_phone = phone_number or ""
+        greeting_context = "new_customer"
+        preferred_pickup = None
+        
+        if phone_number:
+            customer = await lookup_or_create_customer(phone_number, db)
+            customer_phone = customer.phone_number
+            if customer.name:
+                customer_name = customer.name
+                greeting_context = "returning_customer"
+            preferred_pickup = customer.preferred_pickup_time
+        
+        # Check business hours
+        if current_day not in store_hours.business_hours:
+            is_open = False
+            business_message = "No business hours configured for this day"
+        else:
+            day_hours = store_hours.business_hours[current_day]
+            if day_hours.is_closed:
+                is_open = False
+                business_message = "Restaurant is closed today"
+            else:
+                is_open = is_time_in_business_hours(current_time.time(), day_hours)
+                if day_hours.periods:
+                    hours_display = ", ".join([f"{p.open_time} - {p.close_time}" for p in day_hours.periods])
+                else:
+                    hours_display = f"{day_hours.open_time} - {day_hours.close_time}"
+                
+                business_message = f"Today's hours: {hours_display}"
+        
+        # Check lunch hours
+        is_lunch = False
+        lunch_message = "Lunch service not available"
+        if store_hours.lunch_hours and current_day in store_hours.lunch_hours:
+            lunch_hours_today = store_hours.lunch_hours[current_day]
+            if not lunch_hours_today.is_closed:
+                is_lunch = is_time_in_business_hours(current_time.time(), lunch_hours_today)
+                if lunch_hours_today.periods:
+                    lunch_display = ", ".join([f"{p.open_time} - {p.close_time}" for p in lunch_hours_today.periods])
+                else:
+                    lunch_display = f"{lunch_hours_today.open_time} - {lunch_hours_today.close_time}"
+                lunch_message = f"Lunch hours: {lunch_display}"
+        
+        # Calculate pickup time
+        pickup_time = calculate_pickup_time(preferred_pickup)
+        
+        return DynamicVariablesResponse(
+            is_in_business_hour=is_open,
+            is_lunch_hour=is_lunch,
+            current_eastern_time=format_time_for_voice(current_time),
+            pickup_time=pickup_time,
+            customer_name=customer_name,
+            customer_phone_number=customer_phone,
+            greeting_context=greeting_context,
+            business_hours_message=business_message,
+            lunch_hours_message=lunch_message
+        )
+        
     except Exception as e:
         logger.error(f"Error checking business hours: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to check business hours")
 
-
+@app.post("/update_customer_name")
+async def update_customer_name(
+    phone_number: str = Query(..., description="Customer phone number"),
+    customer_name: str = Query(..., description="Customer name"),
+    db: Session = Depends(get_db)
+):
+    """Update customer name when collected during conversation"""
+    try:
+        clean_phone = ''.join(filter(str.isdigit, phone_number))
+        customer = db.query(Customer).filter(Customer.phone_number == clean_phone).first()
+        
+        if customer:
+            customer.name = customer_name
+            customer.updated_at = datetime.utcnow()
+            db.commit()
+            return {"message": "Customer name updated successfully"}
+        else:
+            # Create new customer with name
+            new_customer = Customer(
+                phone_number=clean_phone,
+                name=customer_name,
+                last_call_at=datetime.utcnow()
+            )
+            db.add(new_customer)
+            db.commit()
+            return {"message": "New customer created with name"}
+            
+    except Exception as e:
+        logger.error(f"Error updating customer name: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update customer name")
 
 async def _check_lunch_hours(restaurant_id: str):
     """Internal function to check lunch hours"""
