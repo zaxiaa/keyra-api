@@ -7,6 +7,10 @@ from fastapi import FastAPI, Query, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 import logging
+import os
+
+# USAePay imports
+import usaepay
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -19,6 +23,33 @@ from business_operations import get_db, lookup_or_create_customer, is_in_busines
 
 # Import database test function
 from database_models import test_database_connection
+
+# Import Pydantic for request/response models
+from pydantic import BaseModel
+
+# USAePay models
+class CreditCardRequest(BaseModel):
+    """Request model for USAePay credit card charging"""
+    base_charge_amount: float
+    credit_card_number: str
+    credit_card_cvv: str
+    credit_card_zip_code: str
+    credit_card_expiration_date: str  # Format: MMYY
+    tip_amount: float = 0.0
+    cardholder_name: str = ""
+    billing_street: str = ""
+
+class CreditCardResponse(BaseModel):
+    """Response model for USAePay credit card charging"""
+    success: bool
+    transaction_id: Optional[str] = None
+    auth_code: Optional[str] = None
+    result: str
+    result_code: str
+    total_amount: float
+    error_message: Optional[str] = None
+    avs_result: Optional[str] = None
+    cvv_result: Optional[str] = None
 
 # Create main FastAPI app
 app = FastAPI(
@@ -45,7 +76,8 @@ async def root():
         "message": "Keyra Restaurant API with Customer Memory",
         "services": {
             "business_operations": "Business hours, lunch hours, order totals, store configuration with customer lookup",
-            "recommendations": "Menu recommendations based on preferences"
+            "recommendations": "Menu recommendations based on preferences",
+            "payment_processing": "Credit card processing for delivery orders via USAePay gateway"
         },
         "docs": "/docs",
         "redoc": "/redoc",
@@ -57,6 +89,9 @@ async def root():
             "store_hours": "GET|PUT /store-hours/{1|2}",
             "customer_management": {
                 "update_name": "POST /update_customer_name?phone_number=xxx&customer_name=xxx"
+            },
+            "payment_processing": {
+                "charge_credit_card": "POST /charge-credit-card"
             },
             "database": {
                 "test_connection": "GET /test-db",
@@ -325,6 +360,116 @@ async def recommend(request: Request, restaurant_id: str = Query(..., descriptio
     except Exception as e:
         logger.error(f"Error getting recommendation: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get recommendation")
+
+# USAePay Credit Card Processing Endpoint
+@app.post("/charge-credit-card", response_model=CreditCardResponse)
+async def charge_credit_card(card_request: CreditCardRequest):
+    """
+    Charge a credit card for delivery orders using USAePay gateway.
+    
+    This endpoint processes credit card payments by:
+    1. Taking the base charge amount and tip amount
+    2. Processing the card through USAePay
+    3. Returning transaction details including success/failure status
+    
+    Required environment variables:
+    - USAEPAY_API_KEY: Your USAePay API/Source Key
+    - USAEPAY_API_PIN: Your USAePay API PIN (optional but recommended)
+    - USAEPAY_ENVIRONMENT: 'sandbox' or 'production' (defaults to 'sandbox')
+    """
+    try:
+        # Get USAePay configuration from environment variables
+        api_key = os.getenv("USAEPAY_API_KEY")
+        api_pin = os.getenv("USAEPAY_API_PIN", "")
+        environment = os.getenv("USAEPAY_ENVIRONMENT", "sandbox")
+        
+        if not api_key:
+            logger.error("USAEPAY_API_KEY environment variable not set")
+            raise HTTPException(
+                status_code=500, 
+                detail="Payment processing not configured. Missing API key."
+            )
+        
+        # Calculate total amount (base charge + tip)
+        total_amount = round(card_request.base_charge_amount + card_request.tip_amount, 2)
+        
+        # Set up USAePay authentication
+        if environment.lower() == "production":
+            usaepay.api.set_authentication(api_key, api_pin)
+            gateway_host = "www.usaepay.com"
+        else:
+            usaepay.api.set_authentication(api_key, api_pin)
+            gateway_host = "sandbox.usaepay.com"
+        
+        # Prepare transaction data
+        transaction_data = {
+            "command": "cc:sale",
+            "amount": str(total_amount),
+            "creditcard": {
+                "number": card_request.credit_card_number,
+                "expiration": card_request.credit_card_expiration_date,
+                "cvc": card_request.credit_card_cvv,
+                "cardholder": card_request.cardholder_name or "Card Holder",
+                "avs_street": card_request.billing_street,
+                "avs_zip": card_request.credit_card_zip_code
+            },
+            "amount_detail": {
+                "subtotal": str(card_request.base_charge_amount),
+                "tip": str(card_request.tip_amount)
+            },
+            "description": "Delivery Order Payment",
+            "invoice": f"ORDER_{hash(str(card_request.credit_card_number))}_{total_amount}"[:10]
+        }
+        
+        logger.info(f"Processing credit card charge for ${total_amount}")
+        
+        # Process the transaction through USAePay
+        try:
+            # Create transaction using USAePay SDK
+            transaction = usaepay.transactions.Transaction.create(transaction_data)
+            
+            # Check if transaction was successful
+            if transaction.result_code == "A":  # Approved
+                logger.info(f"Credit card charge successful. Transaction ID: {transaction.key}")
+                return CreditCardResponse(
+                    success=True,
+                    transaction_id=transaction.key,
+                    auth_code=transaction.authcode,
+                    result=transaction.result,
+                    result_code=transaction.result_code,
+                    total_amount=total_amount,
+                    avs_result=getattr(transaction.avs, 'result', None) if hasattr(transaction, 'avs') else None,
+                    cvv_result=getattr(transaction.cvc, 'result', None) if hasattr(transaction, 'cvc') else None
+                )
+            else:
+                # Transaction declined or failed
+                logger.warning(f"Credit card charge declined. Result: {transaction.result}")
+                return CreditCardResponse(
+                    success=False,
+                    result=transaction.result,
+                    result_code=transaction.result_code,
+                    total_amount=total_amount,
+                    error_message=transaction.result
+                )
+                
+        except Exception as transaction_error:
+            logger.error(f"USAePay transaction error: {str(transaction_error)}")
+            return CreditCardResponse(
+                success=False,
+                result="Transaction Error",
+                result_code="E",
+                total_amount=total_amount,
+                error_message=f"Payment processing failed: {str(transaction_error)}"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in credit card processing: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Unexpected error during payment processing: {str(e)}"
+        )
 
 if __name__ == "__main__":
     import uvicorn
