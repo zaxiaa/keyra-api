@@ -154,12 +154,22 @@ async def update_store_hours(restaurant_id: str, store_hours: StoreHours):
         logger.error(f"Error updating store hours: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update store hours")
 
-# Recommendation Endpoint
+# Recommendation Endpoint (with graceful error handling)
 @app.post("/recommend")
 async def recommend(request: Request):
     """Get menu recommendations"""
-    from recommend import recommend as recommend_func
-    return await recommend_func(request)
+    try:
+        from recommend import recommend as recommend_func
+        return await recommend_func(request)
+    except ImportError as e:
+        logger.error(f"Recommendation service not available: {str(e)}")
+        raise HTTPException(
+            status_code=503, 
+            detail="Recommendation service temporarily unavailable. Please ensure GEMINI_API_KEY is configured."
+        )
+    except Exception as e:
+        logger.error(f"Error in recommendation service: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get recommendations")
 
 if __name__ == "__main__":
     import uvicorn
