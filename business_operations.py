@@ -268,7 +268,7 @@ async def _check_business_hours(restaurant_id: str):
         "day": current_day.title()
     }
 
-@app.get("/is-in-business-hour")
+@app.get("/is_in_business_hour")
 async def is_in_business_hour(restaurant_id: str = Query(..., description="Restaurant ID")):
     """Check if restaurant is currently in business hours"""
     try:
@@ -303,6 +303,8 @@ async def is_in_business_hours_get(restaurant_id: str = Query(..., description="
     except Exception as e:
         logger.error(f"Error checking business hours: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to check business hours")
+
+
 
 async def _check_lunch_hours(restaurant_id: str):
     """Internal function to check lunch hours"""
