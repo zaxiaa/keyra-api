@@ -45,11 +45,22 @@ async def root():
         "docs": "/docs",
         "redoc": "/redoc",
         "available_endpoints": {
-            "business_hours": "POST /is_in_business_hour?restaurant_id=1",
-            "lunch_hours": "POST /is_in_lunch_hour?restaurant_id=1", 
-            "order_total": "POST /get-order-total",
-            "recommendations": "POST /recommend",
-            "store_hours": "GET /store-hours/1"
+            "business_hours": "POST /is_in_business_hour?restaurant_id={1|2}",
+            "lunch_hours": "POST /is_in_lunch_hour?restaurant_id={1|2}", 
+            "order_total": "POST /get-order-total?restaurant_id={1|2}",
+            "recommendations": "POST /recommend?restaurant_id={1|2}",
+            "store_hours": "GET|PUT /store-hours/{1|2}"
+        },
+        "supported_restaurant_ids": [1, 2],
+        "examples": {
+            "restaurant_1": {
+                "business_hours": "POST /is_in_business_hour?restaurant_id=1",
+                "recommendations": "POST /recommend?restaurant_id=1"
+            },
+            "restaurant_2": {
+                "business_hours": "POST /is_in_business_hour?restaurant_id=2", 
+                "recommendations": "POST /recommend?restaurant_id=2"
+            }
         }
     }
 
@@ -156,11 +167,11 @@ async def update_store_hours(restaurant_id: str, store_hours: StoreHours):
 
 # Recommendation Endpoint (with graceful error handling)
 @app.post("/recommend")
-async def recommend(request: Request):
+async def recommend(request: Request, restaurant_id: str = Query(..., description="Restaurant ID")):
     """Get menu recommendations"""
     try:
         from recommend import recommend as recommend_func
-        return await recommend_func(request)
+        return await recommend_func(request, restaurant_id)
     except ImportError as e:
         logger.error(f"Recommendation service not available: {str(e)}")
         raise HTTPException(

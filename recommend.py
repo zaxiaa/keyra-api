@@ -454,7 +454,7 @@ async def health_check():
     return {"status": "healthy"}
 
 @app.post("/recommend", response_model=RecommendationResponse)
-async def recommend(request: Request):
+async def recommend(request: Request, restaurant_id: str = Query(..., description="Restaurant ID")):
     try:
         # Parse the request body
         body = await request.json()
@@ -507,18 +507,18 @@ async def recommend(request: Request):
         logger.info(f"Extracted - category: {category}, price_range: {price_range}")
         
         # Load menu
-        menu_text = get_menu_text(str(1))  # Assuming restaurant_id 1 for now
+        menu_text = get_menu_text(restaurant_id)
         if not menu_text:
-            raise HTTPException(status_code=404, detail="Menu not found")
+            raise HTTPException(status_code=404, detail=f"Menu not found for restaurant_id: {restaurant_id}")
         
         # Get cached menu or parse new one
-        menu_items = get_cached_menu(1)
+        menu_items = get_cached_menu(int(restaurant_id))
         if not menu_items:
             logger.info("Sending menu to Gemini for parsing")
             menu_items = parse_menu_with_gemini(menu_text)
             if menu_items:
                 logger.info(f"Parsed {len(menu_items)} menu items")
-                cache_menu(1, menu_items)
+                cache_menu(int(restaurant_id), menu_items)
         
         # Time-based filtering
         tz = pytz.timezone('US/Eastern')

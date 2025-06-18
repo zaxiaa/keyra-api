@@ -1,0 +1,1268 @@
+##Restaurant Info
+
+### For pick up orders, customers will pay at restaurant. Do not ask for payment information 
+
+### This restaurant only offers pick up orders, if customer wants to order for delivery, tell customer to order through uber or door dash. do not mix up lunch menu price with regular menu price. lunch menu available from 11:00 AM to 3:00 PM
+
+## *********************************************************************************************************************
+# Regular Menu
+
+# Starter Menu
+
+### **Chilean Sea Bass**  
+*ID: 1319*
+*Miso marinated, cream horenso*  
+**$42.00**  
+
+---
+
+### **Crab Calamari**  
+*ID: 1320*
+*Lump crab, tobiko, tomato aioli*  
+**$14.50**  
+
+---
+
+### **Crab Wonton**  
+*ID: 1315*
+*Lump crab, cream cheese, yuzu chili*  
+**$16.50**  
+
+---
+
+### **Crunchy Rice**  
+*ID: 1314*
+*Salmon, honey, spicy tuna, avocado*  
+**$14.00**  
+
+---
+
+### **Edamame**  
+*ID: 1309*
+*Dashi salt, shichimi*  
+**$6.00**  
+
+---
+
+### **Gyoza**  
+*ID: 1311*
+*Pan fried pork dumpling, umami chile shoyu*  
+**$8.50**  
+
+---
+
+### **Kara-age Lollipop**  
+*ID: 1321*
+*Fried chicken wing, sweet & spicy garlic gochujang*  
+**$12.50**  
+
+---
+
+### **Maguro Rose**  
+*ID: 1316*
+*Tuna, kuro sesame jus*  
+**$24.50**  
+
+---
+
+### **Miso Shiru **  (Miso Soup)
+*ID: 1307*
+*Dashi, wakame, spring onion*  
+**$4.00**  
+
+---
+
+### **Seared Salmon Belly (3pc)**  
+*ID: 1313*
+*Guacamole, coconut flake, soy aglio drizzle*  
+**$15.50**  
+
+---
+
+### **Seared Salmon Belly (4pc)**  
+*ID: 1628*
+**$18.50**  
+
+---
+
+### **Spicy Salmon Apple Martini**  
+*ID: 1318*
+*Sockeye salmon, sriracha remoulade, masago, apple*  
+**$22.50**  
+
+---
+
+### **Takoyaki**  
+*ID: 1322*
+*Grilled Tako balls w/ mayo and bonito flakes*  
+**$10.50**  
+
+---
+
+### **Tempura Mori**  
+*ID: 1310*
+*Shrimp & mixed veggie*  
+**$12.50**  
+
+---
+
+### **Tuna Poke Dip**  
+*ID: 1317*
+*Tuna, jalapeno, onions, cilantro, mango, wonton chip*  
+**$19.50**  
+
+---
+
+### **Wonton Soup**  
+*ID: 1308*
+*Gyoza, dashi, kamaboko*  
+**$7.50**  
+
+---
+
+### **Yaki Dori**  
+*ID: 1312*
+*Skewered chicken with green onion, tare sauce*  
+**$10.50**  
+
+---
+
+### **Special Oysters**  
+*ID: 1630*
+- **2 pc**: **$9.95**  
+- **4 pc**: **$18.95**  
+
+---
+
+# Salad Menu
+
+### **Fiesta**  
+*ID: 1330*
+*Tuna, salmon, sesame dressing*  
+**$16.00**  
+
+---
+
+### **House Salad**  
+*ID: 1620*
+**$4.00**  
+
+---
+
+### **Wakame** (Seaweek Salad)
+*ID: 1329*
+*Seaweed, pickles*  
+**$7.00**  
+
+# Kitchen/Robata (Grill)
+
+### **Donburi**  
+*ID: 1328*
+*Choice of meat on the bed of rice/soup & salad*  
+- **Chicken**: **$24.00**  
+- **Chicken Garai (spicy)**: **$28.00**  
+- **Beef**: **$32.00**  
+
+---
+
+# From Sushi Corner
+
+### **Chirashi**  
+*ID: 1325*
+*Assorted sashimi on the bed of sushi rice*  
+**$32.00**  
+
+---
+
+### **Nigiri Collection**  
+*ID: 1324*
+*Assorted 11pcs sushi picked by chef*  
+**$46.00**  
+
+---
+
+### **Sashimi Mori**  
+*ID: 1323*
+*Chef's choice of daily fish*  
+**$54.00**  
+
+---
+
+### **Sushi & Roll Combo**  
+*ID: 1327*
+*Assorted 9pcs sushi, choice of spicy tuna or spicy salmon*  
+**$36.00**  
+
+---
+
+### **Unagi Donburi**  
+*ID: 1326*
+*Broiled eel in kamemushi, soy tare*  
+**$29.00**  
+
+
+# HAND ROLL SETS
+
+## 3 Set HANDROLL - $21.00
+*ID: 1334*
+- Spicy salmon, Hamachi Crudo, California
+
+## 4 Set HANDROLL - $29.00
+*ID: 1335*
+- Spicy salmon, Japanese Bagel, Mango Tango, Caterpillar
+
+## 5 Set HANDROLL - $38.00
+*ID: 1336*
+- Hottie scallop, Kanpachi, Torch me slowly, Spicy salmon, Mango Tango
+
+## 6 Set HANDROLL - $48.00
+*ID: 1337*
+- Toro Negi, Hottie scallop, Kanpachi, Torch me slowly, Spicy salmon, Mango Tango
+
+## Individual Hand Rolls - $8.00 each
+*ID: 1616*
+- California HANDROLL   
+*ID: 1614*
+- Salmon Avocado HANDROLL
+*ID: 1618*
+- Spicy Salmon HANDROLL
+*ID: 1617*
+- Spicy Tuna HANDROLL
+*ID: 1613*
+- Tuna Guacamole HANDROLL
+*ID: 1615*
+- Yellow Tail Scallion HANDROLL
+
+# SIGNATURE HAND ROLL
+
+## Hottie Scallop Hand Roll
+*ID: 1339*
+*Roe, chili aioli, cucumber, crunch yam*  
+$11.00
+
+## Spider Hand Roll
+*ID: 1340*
+*Soft shell crab, pepino, guacamole, fish roe*  
+$11.50
+
+## Caterpillar Hand Roll
+*ID: 1341*
+*Eel, guacamole, tobiko*  
+$9.50
+
+## Japanese Bagel Hand Roll
+*ID: 1342*
+*Salmon, cream cheese, avocado, cucumber*  
+$8.50
+
+## Suicide Squad Hand Roll
+*ID: 1343*
+*Spicy tuna, jalapeño, salmon*  
+$9.00
+
+## Mango Tango Hand Roll
+*ID: 1344*
+*Shrimp tempura, mango, crab, eel sauce*  
+$8.50
+
+## Torch Me Slowly Hand Roll
+*ID: 1345*
+*Seared salmon, guacamole, coconut flake, soy aglio*  
+$10.00
+
+## Hamachi crudo Hand Roll
+*ID: 1346*
+*Shiso leaf, scallion, spicy aioli, beet chip*  
+$10.00
+
+## Kanpachi Hand Roll
+*ID: 1347*
+*Truffle remoulade, chives, sweet potato crunch cloud*  
+$11.00
+
+## Hirame shiso Hand Roll
+*ID: 1348*
+*Halibut, yuzu roe, oba, neri ume, yam chip*  
+$10.50
+
+
+# PRIMO HAND ROLL
+
+## Regular Hand Rolls
+- **Egg Sampler Hand Roll** - $23.00 
+  *ID: 1351*
+  *Uni, ikura, tobiko, quail egg*
+
+- **Langostino Hand Roll** - $16.00  
+  *ID: 1353*
+  *Lobster, crab, guacamole, mango*
+
+- **Uni Hand Roll / Japan** - $28.00
+  *ID: 1629*
+
+- **Ikura & Salmon Hand Roll** - $14.00  
+  *ID: 1350*
+  *Yuzu kosho, chive, yam chip*
+
+- **Toro Negi Hand Roll** - $13.00
+  *ID: 1352*
+  *O-toro, scallion*
+
+- **Uni Hand Roll / West coast** - $24.00  
+  *ID: 1349*
+  *West coast / Japan*
+
+## VEGAN
+- **Shiitake Mushroom Hand Roll** - $7.00  
+  *ID: 1354*
+  *Soy tare, onion, purple yam tempura*
+
+- **Pepino Zuke Hand Roll** - $7.00  
+  *ID: 1355*
+  *Pickled cucumber, avocado, crispy yam*
+
+- **Yam Yum Hand Roll** - $8.00  
+  *ID: 1356*
+  *Sweet potato tempura, guacamole, cucumber*
+
+- **Avocado Toast Hand Roll** - $8.00  
+  *ID: 1357*
+  *Guacamole, avocado, yuzu salt, crunch onion, hijiki*
+
+
+
+# NIGIRI - A LA CARTE (1 pc)
+
+### **Aji**  
+*ID: 1384*
+**$8.00**  
+
+---
+
+### **Amaebi (Sweet shrimp)**  
+*ID: 1376*
+**$4.50**  
+
+---
+
+### **Anago (Sea eel)**  
+*ID: 1366*
+**$4.75**  
+
+---
+
+### **Ebi (Shrimp)**  
+*ID: 1371*
+**$3.50**  
+
+---
+
+### **Flounder (Hirame)**  
+*ID: 1362*
+**$4.50**  
+
+---
+
+### **Ika (Squid)**  
+*ID: 1370*
+**$3.50**  
+
+---
+
+### **Ikura (Salmon roe)**  
+*ID: 1380*
+**$6.00**  
+
+---
+
+### **Inari (Tofu)**  
+*ID: 1368*
+**$2.50**  
+
+---
+
+### **Kani (Crab meat)**  
+*ID: 1373*
+**$4.50**  
+
+---
+
+### **Kanikama (Crab stick)**  
+*ID: 1372*
+**$3.50**  
+
+---
+
+### **Kanpachi (Amber jack)** 
+*ID: 1361*
+**$4.95**  
+
+---
+
+### **Mackerel (Saba)**  
+*ID: 1363*
+**$3.95**  
+
+---
+
+### **Masago (Smelt fish roe)** 
+*ID: 1378*
+**$3.25**  
+
+---
+
+### **Salmon (Sake)**  
+*ID: 1359*
+**$4.50**  
+
+---
+
+### **Scallop (Hotategai)** 
+*ID: 1374*
+**$4.75**  
+
+---
+
+### **Sea Bream (Madai)**  
+*ID: 1364*
+**$4.75**  
+
+---
+
+### **Spicy Scallop**  
+*ID: 1375*
+**$5.25**  
+
+---
+
+### **Surf Clam (Hokkigai)** 
+*ID: 1382*
+**$3.50**  
+
+---
+
+### **Tako (Octopus)**  
+*ID: 1369*
+**$3.75**  
+
+---
+
+### **Tamago**  
+*ID: 1619*
+**$3.00**  
+
+---
+
+### **Tobiko (Flying fish roe)** 
+*ID: 1379*
+**$4.50**  
+
+---
+
+### **Tsubugai (Whelk Clam)** 
+*ID: 1383*
+**$4.00**  
+
+---
+
+### **Toro (Fatty tuna)**  
+*ID: 1367*
+**$9.00**  
+
+---
+
+### **Tuna (Maguro)**  
+*ID: 1358*
+**$4.95**  
+
+---
+
+### **Unagi (Freshwater eel)**
+*ID: 1365*
+**$3.75**  
+
+---
+
+### **Uni (Sea urchin)**  
+*ID: 1381*
+- **West Coast**: **$15.00**  
+*ID: 1381*
+- **Japan**: **$18.00**  
+
+---
+
+### **Yellow Tail (Hamachi)**
+*ID: 1360*
+**$4.95**  
+
+---
+
+# Sashimi (2 pcs)
+
+### **Aji**  
+*ID: 1384*
+**$10.00**  
+
+---
+
+### **Amaebi (Sweet shrimp)**  
+*ID: 1376*
+**$6.50**  
+
+---
+
+### **Anago (Sea eel)**  
+*ID: 1366*
+**$6.75**  
+
+---
+
+### **Ebi (Shrimp)**  
+*ID: 1371*
+**$5.50**  
+
+---
+
+### **Flounder (Hirame)**  
+*ID: 1362*
+**$6.50**  
+
+---
+
+### **Ika (Squid)**  
+*ID: 1370*
+**$5.50**  
+
+---
+
+### **Ikura (Salmon roe)**  
+*ID: 1380*
+**$8.00**  
+
+---
+
+### **Inari (Tofu)**  
+*ID: 1368*
+**$6.00**  
+
+---
+
+### **Kani (Crab meat)**  
+*ID: 1373*
+**$8.50**  
+
+---
+
+### **Kanikama (Crab stick)**  
+*ID: 1372*
+**$5.50**  
+
+---
+
+### **Kanpachi (Amber jack)**  
+*ID: 1361*
+**$6.95**  
+
+---
+
+### **Mackerel (Saba)**  
+*ID: 1363*
+**$5.95**  
+
+---
+
+### **Masago (Smelt fish roe)**  
+*ID: 1378*
+**$7.25**  
+
+---
+
+### **Salmon (Sake)**  
+*ID: 1359*
+**$6.50**  
+
+---
+
+### **Scallop (Hotategai)**  
+*ID: 1374*
+**$4.75**  
+
+---
+
+### **Sea Bream (Madai)**  
+*ID: 1364*
+**$6.75**  
+
+---
+
+### **Spicy Scallop**  
+*ID: 1375*
+**$7.25**  
+
+---
+
+### **Surf Clam (Hokkigai)**  
+*ID: 1382*
+**$5.50**  
+
+---
+
+### **Tako (Octopus)**  
+*ID: 1369*
+**$5.75**  
+
+---
+
+### **Tamago**  
+*ID: 1619*
+**$5.00**  
+
+---
+
+### **Tobiko (Flying fish roe)**  
+*ID: 1379*
+**$6.50**  
+
+---
+
+### **Tsubugai (Whelk Clam)**  
+*ID: 1383*
+**$6.00**  
+
+---
+
+### **Toro (Fatty tuna)**  
+*ID: 1367*
+**$11.00**  
+
+---
+
+### **Tuna (Maguro)**  
+*ID: 1358*
+**$6.95**  
+
+---
+
+### **Unagi (Freshwater eel)**  
+*ID: 1365*
+**$5.75**  
+
+---
+
+### **Uni (Sea urchin)**  
+*ID: 1381*
+- **West Coast**: **$17.00**  
+*ID: 1381*
+- **Japan**: **$20.00**  
+
+---
+
+### **Yellow Tail (Hamachi)**  
+*ID: 1360*
+**$6.95**  
+
+---
+
+
+# CLASSIC ROLLS - A LA CARTE
+
+### **California Roll**
+*ID: 1393*
+(modifier: real crab meat $2.50)
+**$7.00**
+
+---
+
+### **Philadelphia**
+*ID: 1400*
+*Salmon, avocado, cream cheese*
+**$9.50**
+
+---
+
+### **Salmon Roll**
+*ID: 1387*
+**$7.50**
+
+---
+
+### **Scallop Roll**
+*ID: 1397*
+*Avocado, mayo*
+**$12.00**
+
+---
+
+### **Spicy Salmon Roll**
+*ID: 1391*
+**$8.50**
+
+---
+
+### **Spicy Tuna Roll**
+*ID: 1392*
+**$8.50**
+
+---
+
+### **Spider Roll**
+*ID: 1399*
+*Deep fried soft shell crab, cucumber, avocado*
+**$12.50**
+
+---
+
+### **Tuna Avocado Roll**
+*ID: 1401*
+**$9.00**
+
+---
+
+### **Unagi (Broiled eel) Roll**
+*ID: 1394*
+**$7.50**
+
+---
+
+### **Hamachi negi (Yellowtail Roll)**
+*ID: 1402*
+**$8.00**
+
+---
+
+### **Salmon Avocado Roll**
+*ID: 1403*
+**$8.00**
+
+---
+
+### **Salmon Skin Roll**
+*ID: 1401*
+*Cucumber, masago, scallion*
+**$9.00**
+
+---
+
+### **Shrimp Tempura Roll**
+*ID: 1398*
+*Cucumber avocado, kanikama*
+**$9.50**
+
+---
+
+### **Spicy Scallop Roll**
+*ID: 1396*
+*Avocado, Spicy Mayo*
+**$12.50**
+
+---
+
+### **Spicy Yellowtail Roll**
+*ID: 1395*
+**$9.00**
+
+---
+
+### **Toro Negi (Fatty tuna/scallion) Roll**
+*ID: 1397*
+**$12.00**
+
+---
+
+### **Tuna Roll**
+*ID: 1388*
+**$7.50**
+
+---
+
+### **Unagi (Broiled eel) Roll**
+*ID: 1390*
+**$7.50**
+
+---
+
+# VEGETABLE ROLLS
+
+### **Cucumber Roll**
+*ID: 1403*
+**$4.95**
+
+---
+
+### **Avocado Roll**
+*ID: 1405*
+**$6.50**
+
+---
+
+### **Sweet Potato Tempura Roll**
+*ID: 1407*
+**$8.50**
+
+---
+
+### **Buddha Delight Roll**
+*ID: 1409*
+*Yam & green bean tempura, asparagus, avocado, cux*
+**$11.50**
+
+---
+
+### **Kanpyo (Seasoned gourd) Roll**
+*ID: 1404*
+**$5.50**
+
+---
+
+### **Avo-Cucumber Roll**
+*ID: 1406*
+**$7.50**
+
+---
+
+### **Inari Roll**
+*ID: 1408*
+*Inari, avocado, tenkatsu*
+**$8.50**
+
+# SPECIALTY ROLL
+
+### **007 Roll**
+*ID: 1424*
+*Shrimp, masago, mayo, kanikama, avocado*
+**$16.00**
+
+---
+
+### **911 Roll**
+*ID: 1418*
+*Spicy tuna, cucumber, salmon, jalapeno, sriracha*
+**$17.00**
+
+---
+
+### **Bad Romance Roll**
+*ID: 1413*
+*Calamari tempura, cucumber, tempura flake, crab, mango & strawberry*
+**$19.00**
+
+---
+
+### **Chunky Monkey Roll**
+*ID: 1427*
+*Banana tempura, eel, avocado, tempura ko, tobiko*
+**$17.00**
+
+---
+
+### **Flying Dragon Roll**
+*ID: 1433*
+*Kanikama, avocado, cucumber rolled, topped with eel, sprinkle of masago & scallion*
+**$22.00**
+
+---
+
+### **Kevin Bacon Roll**
+*ID: 1439*
+*Shrimp tempura, lump crab meat, applewood bacon, mango*
+**$20.00**
+
+---
+
+### **Lobster in Paradise Roll**
+*ID: 1423*
+*Lobster tempura, lump crab meat, avocado, mango, masago*
+**$29.00**
+
+---
+
+### **Mango Tango Roll**
+*ID: 1417*
+*Shrimp tempura, salmon, avocado, mango*
+**$18.00**
+
+---
+
+### **3 Amigo Roll**
+*ID: 1419*
+*Fried calamari, salmon, eel, cucumber, spicy aioli*
+**$19.00**
+
+---
+
+### **Alligator roll**
+*ID: 1430*
+*Shrimp tempura, cucumber, eel, avocado*
+**$20.00**
+
+---
+
+### **Caterpillar Roll**
+*ID: 1432*
+*Eel, cucumber, crab, masago, avocado*
+**$17.00**
+
+---
+
+### **Double Whammy Spicy Tuna Roll**
+*ID: 1438*
+*Spicy tuna, tempura batter rolled, topped with another layer of spicy tuna*
+**$18.00**
+
+---
+
+### **Futomaki Roll**
+*ID: 1431*
+*Kani, tamago, spinach, oshinko, shiitake, cucumber, kanpyo, tobiko, yamagobo*
+**$18.00**
+
+---
+
+### **Lady Killer Roll**
+*ID: 1422*
+*Spicy salmon, cucumber, tempura ko rolled, topped with seared salmon & guac, coconut flake*
+**$20.00**
+
+---
+
+### **Mango Madness Roll**
+*ID: 1411*
+*Crab meat, tempura flake, avocado & mango*
+**$17.00**
+
+---
+
+### **Ninja Tuna Roll**
+*ID: 1416*
+*Spicy tuna, avocado, topped with tuna and seared, Jalapeno & Pico de Gallo*
+**$20.00**
+
+---
+
+### **November Rain Roll**
+*ID: 1426*
+*Shrimp, kanikama, lump crab, avocado, cream cheese, fried to serve, sweet potato chip*
+**$18.00**
+
+---
+
+### **Rainbow Roll**
+*ID: 1429*
+*Crab, avocado, cucumber, salmon, tuna, yellowtail, shrimp, halibut, masago & scallion sprinkle*
+**$19.00**
+
+---
+
+### **Spice Girl Roll**
+*ID: 1421*
+*Shrimp, kanikama, masago, mayo, cream cheese, avocado & deep fried*
+**$16.00**
+
+---
+
+### **The Sushi Is Lava Roll**
+*ID: 1425*
+*Kanikama, avocado, cucumber, fish roe, mayo, broiled to serve*
+**$15.00**
+
+---
+
+### **Treasure Island Roll**
+*ID: 1420*
+*Shrimp tempura, cucumber, salmon, hamachi, guacamole, jalapeno*
+**$20.00**
+
+---
+
+### **Tuna Trio Roll**
+*ID: 1436*
+*Spicy tuna, tempura batter rolled, topped with tuna, yellowtail & avocado, masago sprinkle*
+**$20.00**
+
+---
+
+### **Yami Yami Jumbo Roll**
+*ID: 1435*
+*Tuna, salmon, eel, yellowtail, kanpachi, squid, halibut, flying fish roe, avocado, cucumber, spicy mayo*
+**$24.00**
+
+---
+
+### **Pete's sake Roll**
+*ID: 1412*
+*Spicy tuna, shrimp tempura, avocado, fried onion*
+**$18.00**
+
+---
+
+### **Roll me a fatty Roll**
+*ID: 1414*
+*Yellow tail, avocado, picante aioli, fatty tuna, scallion, tobiko*
+**$23.00**
+
+---
+
+### **Sunny Sunshine Roll**
+*ID: 1434*
+*Tuna, cucumber rolled, topped with salmon & avocado, spicy mayo*
+**$19.00**
+
+---
+
+### **Torch me slowly Roll**
+*Spicy salmon, tempura ko, seared salmon, guacamole, crunch yam*
+**$19.00**
+
+---
+
+### **Triple Salmon Roll**
+*ID: 1415*
+*Spicy salmon roll, topped with salmon & another layer of spicy salmon*
+**$19.00**
+
+---
+
+### **What a Match Roll**
+*ID: 1428*
+*Shrimp tempura, apple rolled, topped with spicy tuna, beet crunch*
+**$18.00**
+
+---
+
+### **Yami Yami Jumbo Roll**
+*ID: 1435*
+*Tuna, salmon, eel, yellowtail, kanpachi, squid, halibut, flying fish roe, avocado, cucumber, spicy mayo*
+**$24.00**
+
+---
+
+# DESERT
+
+### **Wonton Sherbet**
+*ID: 1331*
+*Matcha, fried wonton*
+**$11.00**
+
+---
+
+### **Plum Wine Choya**
+*ID: 1333*
+**$14.00**
+
+---
+
+### **Fried Mochi Ice Cream**
+*Vanilla or green tea mochi, sweet bean paste*
+- **VANILLA**: **$14.00**
+*ID: 1332*
+- **STRAWBERRY**: **$14.00**
+*ID: 1332*
+- **MATCHA GREEN TEA**: **$14.00**
+*ID: 1332*
+
+
+
+### Modifiers
+- ADD AVOCADO $0.75
+- ADD CHICKEN $2.0
+- ADD COCO FLAKES $0.5
+- ADD CREAM CHEESE $0.75
+- ADD CRUNCHY $0.75
+- ADD CUCUMBER $0.75
+- ADD EEL SAUCE $0.5
+- ADD EEL SAUCE SIDE $0.5
+- ADD F. ONION FLAKE $0.5
+- ADD JALAPENO $0.75
+- ADD MAYO $0.5
+- ADD MAYO SIDE $1.0
+- ADD S POTATO FLAKE $0.5
+- ADD SPICY MAYO SIDE $1.0
+- ADD TOBIKO $3.0
+- EXTRA GINGER
+- EXTRA SAUCE
+- EXTRA WASABI
+- NO AVOCADO
+- NO CREAM CHEESE
+- NO CILANTRO
+- NO CRUNCHY TOPPING
+- NO EEL SAUCE
+- NO FRUIT
+- NO GINGER
+- NO JALAPENO
+- NO MANGO
+- NO MAYO
+- NO ONION
+- NO ROE
+- NO SAUCE
+- NO SPICY MAYO
+- NO TEMPURA KO
+- NO WASABI
+- REAL CRAB MEAT $2.5
+- SASHIMI $2.0
+- SMOKED SALMON $1.0
+- CRUNCHY SHELL HAND ROLL $0.75
+
+
+--------------------------------------------------------------------------------------------------
+# Lunch Specials (Only available Monday to Friday 11:00- 3:00 PM
+## Bento & Box Options
+
+### Chicken (Tori tare) Bento - $20.00
+*ID: 1440*
+Chicken breast, shrimp & veggie tempura, shumai, rice, California roll, pickles
+
+### Beef (Gyuniku) Bento - $27.00
+*ID: 1441*
+Sirloin with miso tare, shrimp & veggie tempura, gyoza, California roll, pickles
+
+### Veggie Box - $18.00
+*ID: 1442*
+Vegetable tempura, inari sushi, seaweed salad, veggie roll, rice
+
+## Sushi Sets
+
+### Sashimi Teishoku Set - $31.00
+*ID: 1443*
+Assorted sashimi, shrimp & veggie tempura, gyoza soup, rice, temaki, dainko
+
+### Sushi Teishoku Set - $29.00
+*ID: 1444*
+6 pcs nigri, shrimp & veggie tempura, miso soup, spicy salmon roll, dainko
+
+### Sushi & Roll Combo A - $21.00
+*ID: 1623*
+Assorted sushi 7 pcs & California roll
+
+### Sushi & Roll Combo B - $28.00
+*ID: 1624*
+Assorted sushi 10 pcs & Tuna roll
+
+### Salmon Combo - $26.00
+*ID: 1450*
+Salmon sashimi, salmon nigiri, salmon roll, spicy salmon roll
+
+### Sashimi & Sushi Combo - $32.00
+*ID: 1451*
+
+## Rice Bowls (Don)
+
+### Unagi Don - $24.00
+*ID: 1450*
+Broiled eel in tamamushi, soy tare
+
+### Kaisen Don - $28.00
+*ID: 1451*
+Assorted fish on the bed of rice
+
+### Tuna & Salmon Don - $29.00
+*ID: 1452*
+Tuna and salmon sashimi on the bed of sushi rice
+
+### Chicken & Beef Teriyaki Don - $24.00
+*ID: 1453*
+Topped grilled, soy tare
+
+## Roll Combinations
+
+### 3 Traditional Rolls Mix & Match (pick 3) - $25.00
+*ID: 1454*
+    - CALIFORNIA ROLL $0.00
+    - SALMON ROLL $0.00
+    - SHRIMP TEMPURA ROLL $0.00
+    - SPICY CRAB ROLL $0.00
+    - SPICY SALMON ROLL $0.00
+    - SPICY TUNA ROLL $0.00
+    - TUNA ROLL $0.00
+    - YELLOWTAIL ROLL $0.00
+
+
+### 2 Specialty Rolls - $31.00 (pick two rolls)
+*ID: 1455*
+    - 007 ROLL $0.00
+    - CATERPILLAR ROLL $0.00
+    - DOUBLE SPICY TUNA $0.00
+    - MANGO MADNESS $0.00
+    - PETE SAKE ROLL $0.00
+    - RAINBOW ROLL $0.00
+    - SUNNY SUNSHINE $0.00
+    - TORCH ME SLOWLY $0.00
+
+
+### 1 Specialty Roll + 2 Traditional Rolls - $31.00 
+*ID: 1456*
+    - Traditional Rolls
+        - California Roll $0.00
+        - Salmon Roll $0.00
+        - Tuna Roll $0.00
+        - Yellowtail Roll $0.00
+        - Spicy Salmon Roll $0.00
+        - Spicy Tuna Roll $0.00
+        - Spicy Crab Roll $0.00
+        - Shrimp Tempura Roll $0.00
+    -  Specialty Rolls
+        - Rainbow Roll $0.00
+        - Double Spicy Tuna Roll $0.00
+        - Sunny Sunshine Roll $0.00
+        - Mango Madness $0.00
+        - Caterpillar Roll $0.00
+        - Pete Sake Roll $0.00
+
+### 2 Specialty Rolls + 1 Traditional Roll - $35.00
+*ID: 1457*
+    - Traditional Rolls
+            - California Roll $0.00
+            - Salmon Roll $0.00
+            - Tuna Roll $0.00
+            - Yellowtail Roll $0.00
+            - Spicy Salmon Roll $0.00
+            - Spicy Tuna Roll $0.00
+            - Spicy Crab Roll $0.00
+            - Shrimp Tempura Roll $0.00
+    -  Specialty Rolls
+        - Rainbow Roll $0.00
+        - Double Spicy Tuna Roll $0.00
+        - Sunny Sunshine Roll $0.00
+        - Mango Madness $0.00
+        - Caterpillar Roll $0.00
+        - Pete Sake Roll $0.00
+
+
+### Modifiers
+- ADD AVOCADO $0.75
+- ADD CHICKEN $2.0
+- ADD COCO FLAKES $0.5
+- ADD CREAM CHEESE $0.75
+- ADD CRUNCHY $0.75
+- ADD CUCUMBER $0.75
+- ADD EEL SAUCE $0.5
+- ADD EEL SAUCE SIDE $0.5
+- ADD F. ONION FLAKE $0.5
+- ADD JALAPENO $0.75
+- ADD MAYO $0.5
+- ADD MAYO SIDE $1.0
+- ADD S POTATO FLAKE $0.5
+- ADD SPICY MAYO SIDE $1.0
+- ADD TOBIKO $3.0
+- EXTRA GINGER
+- EXTRA SAUCE
+- EXTRA WASABI
+- NO AVOCADO
+- NO CREAM CHEESE
+- NO CILANTRO
+- NO CRUNCHY TOPPING
+- NO EEL SAUCE
+- NO FRUIT
+- NO GINGER
+- NO JALAPENO
+- NO MANGO
+- NO MAYO
+- NO ONION
+- NO ROE
+- NO SAUCE
+- NO SPICY MAYO
+- NO TEMPURA KO
+- NO WASABI
+- REAL CRAB MEAT $2.5
+- SASHIMI $2.0
+- SMOKED SALMON $1.0
+- CRUNCHY SHELL HAND ROLL $0.75
