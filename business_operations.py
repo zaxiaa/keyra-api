@@ -191,7 +191,8 @@ def calculate_pickup_time(preferred_time: Optional[str] = None) -> str:
         return preferred_time
     
     # Default: 20-25 minutes from now
-    pickup_dt = current_time.replace(minute=current_time.minute + 22)
+    from datetime import timedelta
+    pickup_dt = current_time + timedelta(minutes=22)
     return pickup_dt.strftime("%I:%M %p")
 
 def get_store_hours_file(restaurant_id: str) -> Path:

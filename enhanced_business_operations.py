@@ -92,7 +92,8 @@ def calculate_pickup_time(preferred_time: Optional[str] = None) -> str:
     
     # Default logic: ASAP during business hours, otherwise next available time
     # For now, return "20-25 minutes" as default
-    pickup_dt = current_time.replace(minute=current_time.minute + 22)
+    from datetime import timedelta
+    pickup_dt = current_time + timedelta(minutes=22)
     return pickup_dt.strftime("%I:%M %p")
 
 def time_in_range(current_time: time, start_time: str, end_time: str) -> bool:
