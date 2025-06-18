@@ -69,6 +69,43 @@ async def health_check():
     """Health check endpoint for deployment monitoring"""
     return {"status": "healthy", "service": "keyra-restaurant-api"}
 
+@app.get("/debug")
+async def debug_info():
+    """Debug endpoint to check what routes are available"""
+    routes = []
+    for route in app.routes:
+        if hasattr(route, 'path') and hasattr(route, 'methods'):
+            routes.append({
+                "path": route.path,
+                "methods": list(route.methods)
+            })
+    
+    return {
+        "total_routes": len(app.routes),
+        "routes": routes,
+        "business_endpoints": {
+            "is_in_business_hour": {
+                "path": "/is_in_business_hour",
+                "method": "POST", 
+                "usage": "POST /is_in_business_hour?restaurant_id=1",
+                "exists": any(r.path == "/is_in_business_hour" for r in app.routes if hasattr(r, 'path'))
+            },
+            "is_in_lunch_hour": {
+                "path": "/is_in_lunch_hour",
+                "method": "POST",
+                "usage": "POST /is_in_lunch_hour?restaurant_id=2", 
+                "exists": any(r.path == "/is_in_lunch_hour" for r in app.routes if hasattr(r, 'path'))
+            },
+            "recommend": {
+                "path": "/recommend",
+                "method": "POST",
+                "usage": "POST /recommend?restaurant_id=1",
+                "exists": any(r.path == "/recommend" for r in app.routes if hasattr(r, 'path'))
+            }
+        },
+        "note": "restaurant_id is passed as a query parameter, not in the URL path"
+    }
+
 # Business Operations Endpoints
 @app.post("/is_in_business_hour")
 async def is_in_business_hour(restaurant_id: str = Query(..., description="Restaurant ID")):
