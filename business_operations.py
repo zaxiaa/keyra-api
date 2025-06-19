@@ -82,7 +82,9 @@ def get_restaurant_tax_rate(restaurant_id: str) -> float:
     try:
         # First try to get from database
         db = next(get_db())
-        restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+        # Convert restaurant_id to int for database query
+        restaurant_id_int = int(restaurant_id)
+        restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id_int).first()
         if restaurant and restaurant.tax_rate:
             return restaurant.tax_rate
             

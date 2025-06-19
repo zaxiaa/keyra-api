@@ -174,14 +174,20 @@ async def setup_database(db = Depends(get_db)):
         
         # Create restaurant records with tax rates
         restaurant_1 = Restaurant(
-            id="1",
+            id=1,
             name="Umai Nori Restaurant 1",
+            address="123 Main St, City, State 12345",
+            phone="(555) 123-4567",
+            business_hours={"monday": "11:00-22:00", "tuesday": "11:00-22:00", "wednesday": "11:00-22:00", "thursday": "11:00-22:00", "friday": "11:00-22:00", "saturday": "11:00-22:00", "sunday": "11:00-22:00"},
             tax_rate=0.06  # 6% tax rate
         )
         
         restaurant_2 = Restaurant(
-            id="2", 
+            id=2, 
             name="Umai Nori Restaurant 2",
+            address="456 Oak Ave, City, State 12345",
+            phone="(555) 987-6543",
+            business_hours={"monday": "11:00-22:00", "tuesday": "11:00-22:00", "wednesday": "11:00-22:00", "thursday": "11:00-22:00", "friday": "11:00-22:00", "saturday": "11:00-22:00", "sunday": "11:00-22:00"},
             tax_rate=0.10  # 10% tax rate
         )
         
