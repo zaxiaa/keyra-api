@@ -68,6 +68,50 @@ class SMSResponse(BaseModel):
     error_message: Optional[str] = None
     phone_number: str
 
+# Place Order models
+class PlaceOrderModifier(BaseModel):
+    """Modifier item for order placement"""
+    modifier_name: str
+    modifier_quantity: int
+    modifier_price: float
+
+class PlaceOrderItem(BaseModel):
+    """Order item for order placement"""
+    item_name: str
+    item_base_price: float
+    special_instructions: Optional[str] = ""
+    modifiers: list[PlaceOrderModifier]
+    item_quantity: int
+
+class PlaceOrderRequest(BaseModel):
+    """Request model for placing an order"""
+    customer_address: Optional[str] = ""
+    credit_card_number: Optional[str] = ""
+    order_notes: str
+    customer_phone: str
+    pick_up_time: Optional[str] = ""
+    credit_card_zip_code: Optional[str] = ""
+    delivery_fee: float
+    payment_type: Optional[str] = "cash"
+    credit_card_security_code: Optional[str] = ""
+    tip_amount: float
+    customer_name: str
+    credit_card_expiration_date: Optional[str] = ""
+    order_type: str
+    order_items: list[PlaceOrderItem]
+
+class PlaceOrderResponse(BaseModel):
+    """Response model for order placement"""
+    success: bool
+    order_id: Optional[str] = None
+    order_number: Optional[str] = None
+    total_amount: float
+    payment_status: str
+    estimated_pickup_time: Optional[str] = None
+    message: str
+    error_message: Optional[str] = None
+    transaction_id: Optional[str] = None
+
 # Create main FastAPI app
 app = FastAPI(
     title="Keyra Restaurant API",
@@ -95,7 +139,8 @@ async def root():
             "business_operations": "Business hours, lunch hours, order totals, store configuration with customer lookup",
             "recommendations": "Menu recommendations based on preferences",
             "payment_processing": "Credit card processing for delivery orders via USAePay gateway",
-            "sms_messaging": "Send text messages to customers via Twilio"
+            "sms_messaging": "Send text messages to customers via Twilio",
+            "order_management": "Complete order placement with payment processing and storage"
         },
         "docs": "/docs",
         "redoc": "/redoc",
@@ -113,6 +158,9 @@ async def root():
             },
             "sms_messaging": {
                 "send_text_message": "POST /send-text-message"
+            },
+            "order_management": {
+                "place_order": "POST /place-order?restaurant_id={1|2}"
             },
             "database": {
                 "test_connection": "GET /test-db",
@@ -796,6 +844,381 @@ async def send_text_message(request: Request):
         raise HTTPException(
             status_code=500, 
             detail=f"Unexpected error in SMS service: {str(e)}"
+        )
+
+# Place Order Endpoint
+@app.post("/place-order", response_model=PlaceOrderResponse)
+async def place_order(
+    request: Request,
+    restaurant_id: str = Query(..., description="Restaurant ID"),
+    db: Session = Depends(get_db)
+):
+    """
+    Place a complete order including payment processing and storage.
+    
+    This endpoint handles the full order process by:
+    1. Validating the order data
+    2. Calculating order totals with restaurant-specific tax rates
+    3. Processing payment (if credit card payment)
+    4. Storing the order in the database
+    5. Creating or updating customer information
+    6. Returning order confirmation details
+    
+    Supports both cash and credit card payments.
+    For credit card payments, requires USAePay environment variables.
+    """
+    try:
+        # Get raw request body and parse
+        body = await request.body()
+        raw_body = body.decode('utf-8') if body else ''
+        logger.info(f"PLACE ORDER REQUEST BODY: {raw_body}")
+        
+        import json
+        try:
+            json_data = json.loads(raw_body) if raw_body else {}
+            logger.info(f"PLACE ORDER PARSED JSON: {json_data}")
+        except json.JSONDecodeError as je:
+            logger.error(f"PLACE ORDER JSON DECODE ERROR: {str(je)}")
+            raise HTTPException(status_code=400, detail=f"Invalid JSON: {str(je)}")
+        
+        # Extract order data - handle both direct format and Retell wrapper format
+        if 'args' in json_data and isinstance(json_data['args'], dict):
+            # Retell format: {"call": {...}, "name": "...", "args": {actual_order_data}}
+            order_data = json_data['args']
+            logger.info(f"EXTRACTED ORDER DATA FROM RETELL WRAPPER: {order_data}")
+        else:
+            # Direct format: {order_data}
+            order_data = json_data
+            logger.info(f"USING DIRECT ORDER DATA: {order_data}")
+        
+        # Validate order request data
+        try:
+            order_request = PlaceOrderRequest(**order_data)
+            logger.info(f"ORDER VALIDATION SUCCESS: {order_request.customer_name}")
+        except Exception as validation_error:
+            logger.error(f"ORDER VALIDATION ERROR: {str(validation_error)}")
+            logger.error(f"ORDER DATA THAT FAILED VALIDATION: {order_data}")
+            raise HTTPException(status_code=422, detail=f"Validation error: {str(validation_error)}")
+        
+        # Calculate order total using existing business logic
+        subtotal = 0
+        item_breakdown = []
+        
+        for item in order_request.order_items:
+            # Convert to the existing OrderItem format for calculation
+            from business_operations import OrderItem, Modifier
+            
+            # Convert modifiers
+            order_modifiers = []
+            if item.modifiers:
+                for mod in item.modifiers:
+                    order_modifiers.append(Modifier(
+                        modifier_name=mod.modifier_name,
+                        modifier_quantity=mod.modifier_quantity,
+                        modifier_price=mod.modifier_price
+                    ))
+            
+            # Create OrderItem for calculation
+            calc_item = OrderItem(
+                item_name=item.item_name,
+                item_quantity=item.item_quantity,
+                item_base_price=item.item_base_price,
+                modifiers=order_modifiers,
+                special_instructions=item.special_instructions or ""
+            )
+            
+            item_total = calculate_item_total(calc_item)
+            subtotal += item_total
+            
+            # Create breakdown for this item
+            breakdown_item = {
+                "item_name": item.item_name,
+                "item_quantity": item.item_quantity,
+                "item_base_price": item.item_base_price,
+                "item_subtotal": item.item_base_price * item.item_quantity,
+                "modifier_total": 0,
+                "item_total": item_total,
+                "special_instructions": item.special_instructions or ""
+            }
+            
+            # Add modifier details
+            if item.modifiers:
+                modifier_total = 0
+                modifiers_detail = []
+                for modifier in item.modifiers:
+                    mod_total = modifier.modifier_price * modifier.modifier_quantity
+                    modifier_total += mod_total
+                    modifiers_detail.append({
+                        "name": modifier.modifier_name,
+                        "quantity": modifier.modifier_quantity,
+                        "unit_price": modifier.modifier_price,
+                        "total": mod_total
+                    })
+                breakdown_item["modifier_total"] = modifier_total
+                breakdown_item["modifiers"] = modifiers_detail
+            
+            item_breakdown.append(breakdown_item)
+        
+        # Calculate tax using restaurant-specific rate
+        tax_rate = get_restaurant_tax_rate(restaurant_id)
+        logger.info(f"Tax rate for restaurant {restaurant_id}: {tax_rate}")
+        tax_amount = subtotal * tax_rate
+        total_amount = subtotal + tax_amount + order_request.delivery_fee + order_request.tip_amount
+        
+        logger.info(f"Order totals: subtotal=${subtotal:.2f}, tax=${tax_amount:.2f}, delivery=${order_request.delivery_fee:.2f}, tip=${order_request.tip_amount:.2f}, total=${total_amount:.2f}")
+        
+        # Process payment if credit card
+        transaction_id = None
+        payment_status = "pending"
+        
+        if order_request.payment_type and order_request.payment_type.lower() in ["credit_card", "card", "credit"]:
+            if not order_request.credit_card_number or not order_request.credit_card_expiration_date or not order_request.credit_card_security_code:
+                raise HTTPException(status_code=400, detail="Credit card information required for card payments")
+            
+            # Process credit card payment using existing logic
+            try:
+                # Create CreditCardRequest for payment processing
+                card_request = CreditCardRequest(
+                    base_charge_amount=subtotal + tax_amount + order_request.delivery_fee,
+                    credit_card_number=order_request.credit_card_number,
+                    credit_card_cvv=order_request.credit_card_security_code,
+                    credit_card_zip_code=order_request.credit_card_zip_code or "",
+                    credit_card_expiration_date=order_request.credit_card_expiration_date,
+                    cardholder_name=order_request.customer_name,
+                    tip_amount=order_request.tip_amount,
+                    billing_street=order_request.customer_address or ""
+                )
+                
+                # Process payment (reuse existing credit card logic)
+                payment_result = await process_credit_card_payment(card_request)
+                
+                if payment_result.success:
+                    payment_status = "paid"
+                    transaction_id = payment_result.transaction_id
+                    logger.info(f"Payment successful: {transaction_id}")
+                else:
+                    payment_status = "failed"
+                    logger.error(f"Payment failed: {payment_result.error_message}")
+                    return PlaceOrderResponse(
+                        success=False,
+                        total_amount=total_amount,
+                        payment_status=payment_status,
+                        message="Order could not be placed due to payment failure",
+                        error_message=payment_result.error_message
+                    )
+                    
+            except Exception as payment_error:
+                logger.error(f"Payment processing error: {str(payment_error)}")
+                return PlaceOrderResponse(
+                    success=False,
+                    total_amount=total_amount,
+                    payment_status="failed",
+                    message="Order could not be placed due to payment processing error",
+                    error_message=str(payment_error)
+                )
+        else:
+            # Cash payment
+            payment_status = "cash"
+            logger.info("Cash payment selected")
+        
+        # Create or update customer
+        customer = lookup_or_create_customer(db, order_request.customer_phone, order_request.customer_name)
+        
+        # Store order in database
+        from database_models import Order
+        
+        # Prepare complete order data for storage
+        order_data_for_db = {
+            "restaurant_id": int(restaurant_id),
+            "customer_info": {
+                "name": order_request.customer_name,
+                "phone": order_request.customer_phone,
+                "address": order_request.customer_address or ""
+            },
+            "order_details": {
+                "order_type": order_request.order_type,
+                "pick_up_time": order_request.pick_up_time or "",
+                "order_notes": order_request.order_notes,
+                "items": [
+                    {
+                        "item_name": item.item_name,
+                        "item_quantity": item.item_quantity,
+                        "item_base_price": item.item_base_price,
+                        "special_instructions": item.special_instructions or "",
+                        "modifiers": [
+                            {
+                                "modifier_name": mod.modifier_name,
+                                "modifier_quantity": mod.modifier_quantity,
+                                "modifier_price": mod.modifier_price
+                            } for mod in item.modifiers
+                        ]
+                    } for item in order_request.order_items
+                ]
+            },
+            "pricing": {
+                "subtotal": round(subtotal, 2),
+                "tax_amount": round(tax_amount, 2),
+                "tax_rate": tax_rate,
+                "delivery_fee": order_request.delivery_fee,
+                "tip_amount": order_request.tip_amount,
+                "total_amount": round(total_amount, 2)
+            },
+            "payment": {
+                "payment_type": order_request.payment_type or "cash",
+                "payment_status": payment_status,
+                "transaction_id": transaction_id
+            },
+            "item_breakdown": item_breakdown
+        }
+        
+        # Create order record
+        new_order = Order(
+            customer_id=customer.id,
+            restaurant_id=int(restaurant_id),
+            order_data=order_data_for_db,
+            total_amount=total_amount
+        )
+        
+        db.add(new_order)
+        db.commit()
+        db.refresh(new_order)
+        
+        # Generate order number
+        order_number = f"ORD-{restaurant_id}-{new_order.id:06d}"
+        
+        # Calculate estimated pickup time
+        estimated_pickup_time = order_request.pick_up_time or "ASAP"
+        if not order_request.pick_up_time or order_request.pick_up_time.lower() in ["asap", ""]:
+            # Default to 20-30 minutes from now
+            from datetime import datetime, timedelta
+            import pytz
+            eastern = pytz.timezone('America/New_York')
+            pickup_time = datetime.now(eastern) + timedelta(minutes=25)
+            estimated_pickup_time = pickup_time.strftime("%I:%M %p")
+        
+        logger.info(f"Order placed successfully: {order_number} for ${total_amount:.2f}")
+        
+        return PlaceOrderResponse(
+            success=True,
+            order_id=str(new_order.id),
+            order_number=order_number,
+            total_amount=round(total_amount, 2),
+            payment_status=payment_status,
+            estimated_pickup_time=estimated_pickup_time,
+            message=f"Order {order_number} placed successfully! {f'Estimated pickup time: {estimated_pickup_time}' if order_request.order_type.lower() in ['pickup', 'pick_up', 'pick-up'] else ''}",
+            transaction_id=transaction_id
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in place order: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Unexpected error placing order: {str(e)}"
+        )
+
+# Helper function for credit card processing (extracted from existing endpoint)
+async def process_credit_card_payment(card_request: CreditCardRequest) -> CreditCardResponse:
+    """Process credit card payment using USAePay"""
+    try:
+        # Get USAePay configuration from environment variables
+        api_key = os.getenv("USAEPAY_API_KEY")
+        api_pin = os.getenv("USAEPAY_API_PIN", "")
+        environment = os.getenv("USAEPAY_ENVIRONMENT", "sandbox")
+        
+        if not api_key:
+            logger.error("USAEPAY_API_KEY environment variable not set")
+            return CreditCardResponse(
+                success=False,
+                result="Configuration Error",
+                result_code="E",
+                total_amount=card_request.base_charge_amount + card_request.tip_amount,
+                error_message="Payment processing not configured. Missing API key."
+            )
+        
+        # Calculate total amount (base charge + tip)
+        total_amount = round(card_request.base_charge_amount + card_request.tip_amount, 2)
+        
+        # Set up USAePay authentication
+        if environment.lower() == "production":
+            usaepay.api.set_authentication(api_key, api_pin)
+            gateway_host = "www.usaepay.com"
+        else:
+            usaepay.api.set_authentication(api_key, api_pin)
+            gateway_host = "sandbox.usaepay.com"
+        
+        # Prepare transaction data
+        transaction_data = {
+            "command": "cc:sale",
+            "amount": str(total_amount),
+            "creditcard": {
+                "number": card_request.credit_card_number,
+                "expiration": card_request.credit_card_expiration_date,
+                "cvc": card_request.credit_card_cvv,
+                "cardholder": card_request.cardholder_name,
+                "avs_street": card_request.billing_street,
+                "avs_zip": card_request.credit_card_zip_code
+            },
+            "amount_detail": {
+                "subtotal": str(card_request.base_charge_amount),
+                "tip": str(card_request.tip_amount)
+            },
+            "description": "Restaurant Order Payment",
+            "invoice": f"ORDER_{hash(str(card_request.credit_card_number))}_{total_amount}"[:10]
+        }
+        
+        logger.info(f"Processing credit card charge for ${total_amount}")
+        
+        # Process the transaction through USAePay
+        try:
+            # Create transaction using USAePay SDK
+            transaction = usaepay.transactions.Transaction.create(transaction_data)
+            
+            # Check if transaction was successful
+            if transaction.result_code == "A":  # Approved
+                logger.info(f"Credit card charge successful. Transaction ID: {transaction.key}")
+                return CreditCardResponse(
+                    success=True,
+                    transaction_id=transaction.key,
+                    auth_code=transaction.authcode,
+                    result=transaction.result,
+                    result_code=transaction.result_code,
+                    total_amount=total_amount,
+                    avs_result=getattr(transaction.avs, 'result', None) if hasattr(transaction, 'avs') else None,
+                    cvv_result=getattr(transaction.cvc, 'result', None) if hasattr(transaction, 'cvc') else None
+                )
+            else:
+                # Transaction declined or failed
+                logger.warning(f"Credit card charge declined. Result: {transaction.result}")
+                return CreditCardResponse(
+                    success=False,
+                    result=transaction.result,
+                    result_code=transaction.result_code,
+                    total_amount=total_amount,
+                    error_message=transaction.result
+                )
+                
+        except Exception as transaction_error:
+            logger.error(f"USAePay transaction error: {str(transaction_error)}")
+            return CreditCardResponse(
+                success=False,
+                result="Transaction Error",
+                result_code="E",
+                total_amount=total_amount,
+                error_message=f"Payment processing failed: {str(transaction_error)}"
+            )
+            
+    except Exception as e:
+        logger.error(f"Unexpected error in credit card processing: {str(e)}")
+        return CreditCardResponse(
+            success=False,
+            result="System Error",
+            result_code="E",
+            total_amount=card_request.base_charge_amount + card_request.tip_amount,
+            error_message=f"Unexpected error during payment processing: {str(e)}"
         )
 
 if __name__ == "__main__":
