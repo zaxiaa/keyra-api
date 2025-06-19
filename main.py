@@ -391,11 +391,37 @@ async def is_in_lunch_hour(restaurant_id: str = Query(..., description="Restaura
 
 @app.post("/get-order-total", response_model=OrderTotalResponse)
 async def get_order_total(
-    order: OrderRequest,
+    request: Request,
     restaurant_id: str = Query(..., description="Restaurant ID")
 ):
     """Calculate order total including tax"""
     try:
+        # First, let's capture the raw request body for debugging
+        body = await request.body()
+        raw_body = body.decode('utf-8') if body else ''
+        logger.info(f"RAW REQUEST BODY: {raw_body}")
+        
+        # Parse the JSON manually for debugging
+        import json
+        try:
+            json_data = json.loads(raw_body) if raw_body else {}
+            logger.info(f"PARSED JSON DATA: {json_data}")
+        except json.JSONDecodeError as je:
+            logger.error(f"JSON DECODE ERROR: {str(je)}")
+            logger.error(f"RAW BODY CAUSING ERROR: {repr(raw_body)}")
+            raise HTTPException(status_code=400, detail=f"Invalid JSON: {str(je)}")
+        
+        # Now try to validate with Pydantic
+        try:
+            order = OrderRequest(**json_data)
+            logger.info(f"PYDANTIC VALIDATION SUCCESS: {order}")
+        except Exception as validation_error:
+            logger.error(f"PYDANTIC VALIDATION ERROR: {str(validation_error)}")
+            logger.error(f"DATA THAT FAILED VALIDATION: {json_data}")
+            raise HTTPException(status_code=422, detail=f"Validation error: {str(validation_error)}")
+        
+        logger.info(f"Processing order total for restaurant {restaurant_id}")
+        
         subtotal = 0
         item_breakdown = []
         
@@ -433,19 +459,27 @@ async def get_order_total(
         
         # Calculate tax using restaurant-specific rate
         tax_rate = get_restaurant_tax_rate(restaurant_id)
+        logger.info(f"Tax rate for restaurant {restaurant_id}: {tax_rate}")
         tax_amount = subtotal * tax_rate
         total = subtotal + tax_amount
         
-        return OrderTotalResponse(
+        response = OrderTotalResponse(
             subtotal=round(subtotal, 2),
             tax_amount=round(tax_amount, 2),
             total=round(total, 2),
             item_breakdown=item_breakdown
         )
         
+        logger.info(f"FINAL RESPONSE: {response}")
+        return response
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error calculating order total: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to calculate order total")
+        logger.error(f"UNEXPECTED ERROR: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate order total: {str(e)}")
 
 @app.get("/store-hours/{restaurant_id}")
 async def get_store_hours(restaurant_id: str):
