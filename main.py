@@ -411,13 +411,23 @@ async def get_order_total(
             logger.error(f"RAW BODY CAUSING ERROR: {repr(raw_body)}")
             raise HTTPException(status_code=400, detail=f"Invalid JSON: {str(je)}")
         
+        # Extract order data - handle both direct format and Retell wrapper format
+        if 'args' in json_data and isinstance(json_data['args'], dict):
+            # Retell format: {"call": {...}, "name": "...", "args": {actual_order_data}}
+            order_data = json_data['args']
+            logger.info(f"EXTRACTED ORDER DATA FROM RETELL WRAPPER: {order_data}")
+        else:
+            # Direct format: {order_data}
+            order_data = json_data
+            logger.info(f"USING DIRECT ORDER DATA: {order_data}")
+        
         # Now try to validate with Pydantic
         try:
-            order = OrderRequest(**json_data)
+            order = OrderRequest(**order_data)
             logger.info(f"PYDANTIC VALIDATION SUCCESS: {order}")
         except Exception as validation_error:
             logger.error(f"PYDANTIC VALIDATION ERROR: {str(validation_error)}")
-            logger.error(f"DATA THAT FAILED VALIDATION: {json_data}")
+            logger.error(f"ORDER DATA THAT FAILED VALIDATION: {order_data}")
             raise HTTPException(status_code=422, detail=f"Validation error: {str(validation_error)}")
         
         logger.info(f"Processing order total for restaurant {restaurant_id}")
