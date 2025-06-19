@@ -417,116 +417,9 @@ async def _check_business_hours(restaurant_id: str):
         "day": current_day.title()
     }
 
-@app.post("/is_in_business_hour", response_model=DynamicVariablesResponse)
-async def is_in_business_hour_post(
-    restaurant_id: str = Query(..., description="Restaurant ID"),
-    phone_number: Optional[str] = Query(None, description="Customer phone number for lookup"),
-    db: Session = Depends(get_db)
-):
-    """Enhanced business hours check with customer lookup and dynamic variables"""
-    try:
-        # Get current time in Eastern timezone
-        current_time = get_current_time_eastern()
-        current_day = get_day_name(current_time.weekday())
-        
-        # Load business hours
-        store_hours = load_store_hours(restaurant_id)
-        
-        # Customer lookup if phone number provided
-        customer = None
-        customer_name = ""
-        customer_phone = phone_number or ""
-        greeting_context = "new_customer"
-        preferred_pickup = None
-        
-        if phone_number:
-            customer = await lookup_or_create_customer(phone_number, db)
-            customer_phone = customer.phone_number
-            if customer.name:
-                customer_name = customer.name
-                greeting_context = "returning_customer"
-            preferred_pickup = customer.preferred_pickup_time
-        
-        # Check business hours
-        if current_day not in store_hours.business_hours:
-            is_open = False
-            business_message = "No business hours configured for this day"
-        else:
-            day_hours = store_hours.business_hours[current_day]
-            if day_hours.is_closed:
-                is_open = False
-                business_message = "Restaurant is closed today"
-            else:
-                is_open = is_time_in_business_hours(current_time.time(), day_hours)
-                if day_hours.periods:
-                    hours_display = ", ".join([f"{p.open_time} - {p.close_time}" for p in day_hours.periods])
-                else:
-                    hours_display = f"{day_hours.open_time} - {day_hours.close_time}"
-                
-                business_message = f"Today's hours: {hours_display}"
-        
-        # Check lunch hours
-        is_lunch = False
-        lunch_message = "Lunch service not available"
-        if store_hours.lunch_hours and current_day in store_hours.lunch_hours:
-            lunch_hours_today = store_hours.lunch_hours[current_day]
-            if not lunch_hours_today.is_closed:
-                is_lunch = is_time_in_business_hours(current_time.time(), lunch_hours_today)
-                if lunch_hours_today.periods:
-                    lunch_display = ", ".join([f"{p.open_time} - {p.close_time}" for p in lunch_hours_today.periods])
-                else:
-                    lunch_display = f"{lunch_hours_today.open_time} - {lunch_hours_today.close_time}"
-                lunch_message = f"Lunch hours: {lunch_display}"
-        
-        # Calculate pickup time
-        pickup_time = calculate_pickup_time(preferred_pickup)
-        
-        return DynamicVariablesResponse(
-            is_in_business_hour=is_open,
-            is_lunch_hour=is_lunch,
-            current_eastern_time=format_time_for_voice(current_time),
-            pickup_time=pickup_time,
-            customer_name=customer_name,
-            customer_phone_number=customer_phone,
-            greeting_context=greeting_context,
-            business_hours_message=business_message,
-            lunch_hours_message=lunch_message
-        )
-        
-    except Exception as e:
-        logger.error(f"Error checking business hours: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to check business hours")
+# Business hour check endpoint moved to main.py to avoid duplicate endpoints
 
-@app.post("/update_customer_name")
-async def update_customer_name(
-    phone_number: str = Query(..., description="Customer phone number"),
-    customer_name: str = Query(..., description="Customer name"),
-    db: Session = Depends(get_db)
-):
-    """Update customer name when collected during conversation"""
-    try:
-        clean_phone = ''.join(filter(str.isdigit, phone_number))
-        customer = db.query(Customer).filter(Customer.phone_number == clean_phone).first()
-        
-        if customer:
-            customer.name = customer_name
-            customer.updated_at = datetime.utcnow()
-            db.commit()
-            return {"message": "Customer name updated successfully"}
-        else:
-            # Create new customer with name
-            new_customer = Customer(
-                phone_number=clean_phone,
-                name=customer_name,
-                last_call_at=datetime.utcnow()
-            )
-            db.add(new_customer)
-            db.commit()
-            return {"message": "New customer created with name"}
-            
-    except Exception as e:
-        logger.error(f"Error updating customer name: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to update customer name")
+# Update customer name endpoint moved to main.py to avoid duplicate endpoints
 
 async def _check_lunch_hours(restaurant_id: str):
     """Internal function to check lunch hours"""
@@ -557,72 +450,9 @@ async def _check_lunch_hours(restaurant_id: str):
         "day": current_day.title()
     }
 
-@app.post("/is_in_lunch_hour")
-async def is_in_lunch_hour_post(restaurant_id: str = Query(..., description="Restaurant ID")):
-    """Check if restaurant is currently in lunch hours (POST method)"""
-    try:
-        return await _check_lunch_hours(restaurant_id)
-    except Exception as e:
-        logger.error(f"Error checking lunch hours: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to check lunch hours")
+# Lunch hour check endpoint moved to main.py to avoid duplicate endpoints
 
-@app.post("/get-order-total", response_model=OrderTotalResponse)
-async def get_order_total(
-    order: OrderRequest,
-    restaurant_id: str = Query(..., description="Restaurant ID")
-):
-    """Calculate order total including tax (ignoring delivery fee and tip for now)"""
-    try:
-        subtotal = 0
-        item_breakdown = []
-        
-        for item in order.order_items:
-            item_total = calculate_item_total(item)
-            subtotal += item_total
-            
-            # Create breakdown for this item
-            breakdown_item = {
-                "item_name": item.item_name,
-                "item_quantity": item.item_quantity,
-                "item_base_price": item.item_base_price,
-                "item_subtotal": item.item_base_price * item.item_quantity,
-                "modifier_total": 0,
-                "item_total": item_total
-            }
-            
-            # Add modifier details
-            if item.modifiers:
-                modifiers_detail = []
-                modifier_total = 0
-                for modifier in item.modifiers:
-                    mod_total = modifier.modifier_price * modifier.modifier_quantity
-                    modifier_total += mod_total
-                    modifiers_detail.append({
-                        "name": modifier.modifier_name,
-                        "quantity": modifier.modifier_quantity,
-                        "unit_price": modifier.modifier_price,
-                        "total": mod_total
-                    })
-                breakdown_item["modifier_total"] = modifier_total
-                breakdown_item["modifiers"] = modifiers_detail
-            
-            item_breakdown.append(breakdown_item)
-        
-        # Calculate tax using restaurant-specific rate
-        tax_rate = get_restaurant_tax_rate(restaurant_id)
-        tax_amount = subtotal * tax_rate
-        total = subtotal + tax_amount
-        
-        return OrderTotalResponse(
-            subtotal=round(subtotal, 2),
-            tax_amount=round(tax_amount, 2),
-            total=round(total, 2),
-            item_breakdown=item_breakdown
-        )
-        
-    except Exception as e:
-        logger.error(f"Error calculating order total: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to calculate order total")
+# Order total calculation moved to main.py to avoid duplicate endpoints
 
 # Configuration endpoints for managing store hours
 
