@@ -35,8 +35,8 @@ class CreditCardRequest(BaseModel):
     credit_card_cvv: str
     credit_card_zip_code: str
     credit_card_expiration_date: str  # Format: MMYY
+    cardholder_name: str  # Required field - customer's full name
     tip_amount: float = 0.0
-    cardholder_name: str = ""
     billing_street: str = ""
 
 class CreditCardResponse(BaseModel):
@@ -409,7 +409,7 @@ async def charge_credit_card(card_request: CreditCardRequest):
                 "number": card_request.credit_card_number,
                 "expiration": card_request.credit_card_expiration_date,
                 "cvc": card_request.credit_card_cvv,
-                "cardholder": card_request.cardholder_name or "Card Holder",
+                "cardholder": card_request.cardholder_name,
                 "avs_street": card_request.billing_street,
                 "avs_zip": card_request.credit_card_zip_code
             },

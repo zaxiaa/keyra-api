@@ -80,7 +80,7 @@ def test_validation_errors():
     # Test with missing required fields
     invalid_request = {
         "base_charge_amount": 25.99,
-        # Missing credit card info
+        # Missing credit card info and cardholder_name
         "tip_amount": 5.00
     }
     
