@@ -155,6 +155,49 @@ async def test_database():
         logger.error(f"Database test failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Database test failed: {str(e)}")
 
+@app.post("/setup-tax-rates")
+async def setup_tax_rates(db = Depends(get_db)):
+    """One-time setup endpoint to initialize restaurant tax rates in PostgreSQL"""
+    try:
+        from database_models import Restaurant
+        
+        # Check if restaurants already exist
+        existing = db.query(Restaurant).all()
+        if existing:
+            return {
+                "message": "Restaurants already exist",
+                "restaurants": [{"id": r.id, "name": r.name, "tax_rate": r.tax_rate} for r in existing]
+            }
+        
+        # Create restaurant records with tax rates
+        restaurant_1 = Restaurant(
+            id="1",
+            name="Umai Nori Restaurant 1",
+            tax_rate=0.06  # 6% tax rate
+        )
+        
+        restaurant_2 = Restaurant(
+            id="2", 
+            name="Umai Nori Restaurant 2",
+            tax_rate=0.10  # 10% tax rate
+        )
+        
+        db.add(restaurant_1)
+        db.add(restaurant_2)
+        db.commit()
+        
+        return {
+            "message": "Restaurant tax rates set up successfully",
+            "restaurants": [
+                {"id": "1", "name": "Umai Nori Restaurant 1", "tax_rate": 0.06},
+                {"id": "2", "name": "Umai Nori Restaurant 2", "tax_rate": 0.10}
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"Error setting up tax rates: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to set up tax rates: {str(e)}")
+
 @app.get("/debug")
 async def debug_info():
     """Debug endpoint to check what routes are available"""
