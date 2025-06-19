@@ -73,8 +73,17 @@ async def startup_event():
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 
-# Tax rate (static 6% for now)
-TAX_RATE = 0.06
+# Default tax rate (6% - individual restaurants can override this)
+DEFAULT_TAX_RATE = 0.06
+
+def get_restaurant_tax_rate(restaurant_id: str) -> float:
+    """Get the tax rate for a specific restaurant"""
+    try:
+        store_hours = load_store_hours(restaurant_id)
+        return store_hours.tax_rate
+    except Exception as e:
+        logger.warning(f"Could not load tax rate for restaurant {restaurant_id}, using default: {str(e)}")
+        return DEFAULT_TAX_RATE
 
 # --- PYDANTIC MODELS ---
 
@@ -97,6 +106,7 @@ class StoreHours(BaseModel):
     business_hours: Dict[str, BusinessHours]  # day_of_week -> BusinessHours
     lunch_hours: Optional[Dict[str, BusinessHours]] = None
     timezone: str = "UTC"
+    tax_rate: float = 0.06  # Default 6% tax rate
 
 class Modifier(BaseModel):
     modifier_name: str
@@ -244,7 +254,8 @@ def load_store_hours(restaurant_id: str) -> StoreHours:
                 "saturday": BusinessHours(periods=[TimePeriod(open_time="11:00", close_time="15:00")]),
                 "sunday": BusinessHours(periods=[TimePeriod(open_time="12:00", close_time="15:00")]),
             },
-            timezone="America/New_York"
+            timezone="America/New_York",
+            tax_rate=0.06  # Default 6% tax rate
         )
         save_store_hours(restaurant_id, default_hours)
         return default_hours
@@ -563,8 +574,9 @@ async def get_order_total(
             
             item_breakdown.append(breakdown_item)
         
-        # Calculate tax (6% static)
-        tax_amount = subtotal * TAX_RATE
+        # Calculate tax using restaurant-specific rate
+        tax_rate = get_restaurant_tax_rate(restaurant_id)
+        tax_amount = subtotal * tax_rate
         total = subtotal + tax_amount
         
         return OrderTotalResponse(

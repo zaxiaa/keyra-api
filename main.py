@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Import the internal functions directly from business_operations
 from business_operations import _check_lunch_hours, load_store_hours, save_store_hours, calculate_item_total
-from business_operations import OrderRequest, OrderTotalResponse, StoreHours, TAX_RATE, DynamicVariablesResponse
+from business_operations import OrderRequest, OrderTotalResponse, StoreHours, get_restaurant_tax_rate, DynamicVariablesResponse
 from business_operations import get_db, lookup_or_create_customer, is_in_business_hour_post, update_customer_name
 
 # Import database test function
@@ -291,8 +291,9 @@ async def get_order_total(
             
             item_breakdown.append(breakdown_item)
         
-        # Calculate tax (6% static)
-        tax_amount = subtotal * TAX_RATE
+        # Calculate tax using restaurant-specific rate
+        tax_rate = get_restaurant_tax_rate(restaurant_id)
+        tax_amount = subtotal * tax_rate
         total = subtotal + tax_amount
         
         return OrderTotalResponse(
