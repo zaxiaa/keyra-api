@@ -144,11 +144,11 @@ class OrderRequest(BaseModel):
     customer_name: str
     order_type: str
     order_items: List[OrderItem]
-    
-    # Optional fields that should have defaults
-    customer_address: Optional[str] = ""
-    execution_message: Optional[str] = ""
     pick_up_time: Optional[str] = ""
+    
+    # Optional fields that the tool may or may not send
+    customer_address: Optional[str] = None
+    execution_message: Optional[str] = None
     
     @field_validator('order_type')
     @classmethod

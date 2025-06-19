@@ -155,17 +155,20 @@ async def test_database():
         logger.error(f"Database test failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Database test failed: {str(e)}")
 
-@app.post("/setup-tax-rates")
-async def setup_tax_rates(db = Depends(get_db)):
-    """One-time setup endpoint to initialize restaurant tax rates in PostgreSQL"""
+@app.post("/setup-database")
+async def setup_database(db = Depends(get_db)):
+    """One-time setup endpoint to initialize database tables and restaurant tax rates"""
     try:
-        from database_models import Restaurant
+        from database_models import Base, Restaurant, engine
+        
+        # Create all tables
+        Base.metadata.create_all(bind=engine)
         
         # Check if restaurants already exist
         existing = db.query(Restaurant).all()
         if existing:
             return {
-                "message": "Restaurants already exist",
+                "message": "Database already set up",
                 "restaurants": [{"id": r.id, "name": r.name, "tax_rate": r.tax_rate} for r in existing]
             }
         
@@ -187,7 +190,7 @@ async def setup_tax_rates(db = Depends(get_db)):
         db.commit()
         
         return {
-            "message": "Restaurant tax rates set up successfully",
+            "message": "Database and restaurant tax rates set up successfully",
             "restaurants": [
                 {"id": "1", "name": "Umai Nori Restaurant 1", "tax_rate": 0.06},
                 {"id": "2", "name": "Umai Nori Restaurant 2", "tax_rate": 0.10}
@@ -195,8 +198,8 @@ async def setup_tax_rates(db = Depends(get_db)):
         }
         
     except Exception as e:
-        logger.error(f"Error setting up tax rates: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to set up tax rates: {str(e)}")
+        logger.error(f"Error setting up database: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to set up database: {str(e)}")
 
 @app.get("/debug")
 async def debug_info():
