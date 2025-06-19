@@ -54,6 +54,20 @@ class CreditCardResponse(BaseModel):
     avs_result: Optional[str] = None
     cvv_result: Optional[str] = None
 
+# Twilio SMS models
+class SMSRequest(BaseModel):
+    """Request model for sending SMS via Twilio"""
+    customer_phone: str
+    message: str
+
+class SMSResponse(BaseModel):
+    """Response model for SMS sending"""
+    success: bool
+    message_sid: Optional[str] = None
+    status: str
+    error_message: Optional[str] = None
+    phone_number: str
+
 # Create main FastAPI app
 app = FastAPI(
     title="Keyra Restaurant API",
@@ -80,7 +94,8 @@ async def root():
         "services": {
             "business_operations": "Business hours, lunch hours, order totals, store configuration with customer lookup",
             "recommendations": "Menu recommendations based on preferences",
-            "payment_processing": "Credit card processing for delivery orders via USAePay gateway"
+            "payment_processing": "Credit card processing for delivery orders via USAePay gateway",
+            "sms_messaging": "Send text messages to customers via Twilio"
         },
         "docs": "/docs",
         "redoc": "/redoc",
@@ -95,6 +110,9 @@ async def root():
             },
             "payment_processing": {
                 "charge_credit_card": "POST /charge-credit-card"
+            },
+            "sms_messaging": {
+                "send_text_message": "POST /send-text-message"
             },
             "database": {
                 "test_connection": "GET /test-db",
@@ -654,6 +672,130 @@ async def charge_credit_card(card_request: CreditCardRequest):
         raise HTTPException(
             status_code=500, 
             detail=f"Unexpected error during payment processing: {str(e)}"
+        )
+
+# Twilio SMS Endpoint
+@app.post("/send-text-message", response_model=SMSResponse)
+async def send_text_message(request: Request):
+    """
+    Send an SMS message to a customer using Twilio.
+    
+    This endpoint sends text messages by:
+    1. Taking the customer phone number and message content
+    2. Processing the request through Twilio's SMS API
+    3. Returning message status and details
+    
+    Required environment variables:
+    - TWILIO_ACCOUNT_SID: Your Twilio Account SID
+    - TWILIO_AUTH_TOKEN: Your Twilio Auth Token
+    - TWILIO_PHONE_NUMBER: Your Twilio phone number (from number)
+    """
+    try:
+        # Get raw request body and parse
+        body = await request.body()
+        raw_body = body.decode('utf-8') if body else ''
+        logger.info(f"SMS REQUEST BODY: {raw_body}")
+        
+        import json
+        try:
+            json_data = json.loads(raw_body) if raw_body else {}
+            logger.info(f"SMS PARSED JSON: {json_data}")
+        except json.JSONDecodeError as je:
+            logger.error(f"SMS JSON DECODE ERROR: {str(je)}")
+            raise HTTPException(status_code=400, detail=f"Invalid JSON: {str(je)}")
+        
+        # Extract SMS data - handle both direct format and Retell wrapper format
+        if 'args' in json_data and isinstance(json_data['args'], dict):
+            # Retell format: {"call": {...}, "name": "...", "args": {actual_sms_data}}
+            sms_data = json_data['args']
+            logger.info(f"EXTRACTED SMS DATA FROM RETELL WRAPPER: {sms_data}")
+        else:
+            # Direct format: {sms_data}
+            sms_data = json_data
+            logger.info(f"USING DIRECT SMS DATA: {sms_data}")
+        
+        # Validate SMS request data
+        try:
+            sms_request = SMSRequest(**sms_data)
+            logger.info(f"SMS VALIDATION SUCCESS: {sms_request}")
+        except Exception as validation_error:
+            logger.error(f"SMS VALIDATION ERROR: {str(validation_error)}")
+            logger.error(f"SMS DATA THAT FAILED VALIDATION: {sms_data}")
+            raise HTTPException(status_code=422, detail=f"Validation error: {str(validation_error)}")
+        
+        # Get Twilio configuration from environment variables
+        account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+        auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+        twilio_phone = os.getenv("TWILIO_PHONE_NUMBER")
+        
+        if not account_sid or not auth_token or not twilio_phone:
+            missing_vars = []
+            if not account_sid: missing_vars.append("TWILIO_ACCOUNT_SID")
+            if not auth_token: missing_vars.append("TWILIO_AUTH_TOKEN")
+            if not twilio_phone: missing_vars.append("TWILIO_PHONE_NUMBER")
+            
+            logger.error(f"Missing Twilio environment variables: {missing_vars}")
+            raise HTTPException(
+                status_code=500, 
+                detail=f"SMS service not configured. Missing environment variables: {', '.join(missing_vars)}"
+            )
+        
+        # Initialize Twilio client
+        try:
+            from twilio.rest import Client
+            client = Client(account_sid, auth_token)
+            logger.info(f"Twilio client initialized successfully")
+        except ImportError:
+            logger.error("Twilio library not installed")
+            raise HTTPException(
+                status_code=500, 
+                detail="SMS service unavailable. Twilio library not installed."
+            )
+        except Exception as client_error:
+            logger.error(f"Failed to initialize Twilio client: {str(client_error)}")
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Failed to initialize SMS service: {str(client_error)}"
+            )
+        
+        # Send SMS message
+        try:
+            logger.info(f"Sending SMS to {sms_request.customer_phone} from {twilio_phone}")
+            logger.info(f"Message content: {sms_request.message}")
+            
+            message = client.messages.create(
+                body=sms_request.message,
+                from_=twilio_phone,
+                to=sms_request.customer_phone
+            )
+            
+            logger.info(f"SMS sent successfully. Message SID: {message.sid}")
+            
+            return SMSResponse(
+                success=True,
+                message_sid=message.sid,
+                status=message.status,
+                phone_number=sms_request.customer_phone
+            )
+            
+        except Exception as sms_error:
+            logger.error(f"Failed to send SMS: {str(sms_error)}")
+            return SMSResponse(
+                success=False,
+                status="failed",
+                error_message=f"Failed to send SMS: {str(sms_error)}",
+                phone_number=sms_request.customer_phone
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in SMS service: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Unexpected error in SMS service: {str(e)}"
         )
 
 if __name__ == "__main__":
