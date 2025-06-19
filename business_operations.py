@@ -1,7 +1,7 @@
 import json
 import logging
 from fastapi import FastAPI, HTTPException, Query, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime, time
 import pytz
@@ -132,6 +132,23 @@ class OrderRequest(BaseModel):
     pick_up_time: Optional[str] = None
     order_type: str
     order_items: List[OrderItem]
+    
+    @field_validator('order_type')
+    @classmethod
+    def normalize_order_type(cls, v):
+        """Normalize order_type to accept both 'pick-up' and 'pick_up' formats"""
+        if isinstance(v, str):
+            # Convert 'pick-up' to 'pick_up' for consistency
+            if v.lower() == 'pick-up':
+                return 'pick_up'
+            # Also handle other common variations
+            elif v.lower() == 'pickup':
+                return 'pick_up'
+            elif v.lower() == 'dine-in':
+                return 'dine_in'
+            elif v.lower() == 'dinein':
+                return 'dine_in'
+        return v
 
 class OrderTotalResponse(BaseModel):
     subtotal: float
