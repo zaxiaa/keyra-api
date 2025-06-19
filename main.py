@@ -155,6 +155,8 @@ async def root():
             "recommendations": "POST /recommend?restaurant_id={1|2}",
             "store_hours": "GET|PUT /store-hours/{1|2}",
             "customer_management": {
+                "lookup_customer": "GET /lookup-customer?phone_number=xxx",
+                "save_name": "POST /save-customer-name?phone_number=xxx&customer_name=xxx",
                 "update_name": "POST /update_customer_name?phone_number=xxx&customer_name=xxx"
             },
             "payment_processing": {
@@ -364,7 +366,7 @@ async def enhanced_business_hour_check(
         preferred_pickup = None
         
         if phone_number:
-            customer = await lookup_or_create_customer(phone_number, db)
+            customer = lookup_or_create_customer(db, phone_number)
             customer_phone = customer.phone_number
             if customer.name:
                 customer_name = customer.name
@@ -421,19 +423,116 @@ async def enhanced_business_hour_check(
         logger.error(f"Error checking business hours: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to check business hours")
 
+@app.get("/lookup-customer")
+async def lookup_customer_by_phone(
+    phone_number: str = Query(..., description="Customer phone number"),
+    db = Depends(get_db)
+):
+    """Lookup customer by phone number to check if we know their name"""
+    try:
+        clean_phone = ''.join(filter(str.isdigit, phone_number))
+        customer = db.query(Customer).filter(Customer.phone_number == clean_phone).first()
+        
+        if customer and customer.name:
+            # Update last call time
+            customer.last_call_at = datetime.utcnow()
+            db.commit()
+            
+            return {
+                "customer_found": True,
+                "customer_name": customer.name,
+                "phone_number": customer.phone_number,
+                "is_returning": True,
+                "last_call": customer.last_call_at.isoformat() if customer.last_call_at else None,
+                "preferred_pickup_time": customer.preferred_pickup_time,
+                "message": f"Welcome back, {customer.name}!"
+            }
+        elif customer:
+            # Customer exists but no name stored
+            customer.last_call_at = datetime.utcnow()
+            db.commit()
+            return {
+                "customer_found": True,
+                "customer_name": None,
+                "phone_number": customer.phone_number,
+                "is_returning": True,
+                "needs_name": True,
+                "message": "We have your number on file, but could you remind me of your name?"
+            }
+        else:
+            # New customer
+            return {
+                "customer_found": False,
+                "customer_name": None,
+                "phone_number": clean_phone,
+                "is_returning": False,
+                "needs_name": True,
+                "message": "I don't see this number in our system. Could I get your name please?"
+            }
+            
+    except Exception as e:
+        logger.error(f"Error looking up customer: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to lookup customer")
+
+@app.post("/save-customer-name")
+async def save_customer_name(
+    phone_number: str = Query(..., description="Customer phone number"),
+    customer_name: str = Query(..., description="Customer name"),
+    db = Depends(get_db)
+):
+    """Save customer name when collected during conversation"""
+    try:
+        clean_phone = ''.join(filter(str.isdigit, phone_number))
+        customer = db.query(Customer).filter(Customer.phone_number == clean_phone).first()
+        
+        if customer:
+            # Update existing customer
+            customer.name = customer_name.strip()
+            customer.updated_at = datetime.utcnow()
+            customer.last_call_at = datetime.utcnow()
+            db.commit()
+            return {
+                "success": True,
+                "action": "updated",
+                "customer_name": customer.name,
+                "phone_number": customer.phone_number,
+                "message": f"Great! I've saved your name as {customer.name}. Next time you call, I'll remember you!"
+            }
+        else:
+            # Create new customer with name
+            new_customer = Customer(
+                phone_number=clean_phone,
+                name=customer_name.strip(),
+                last_call_at=datetime.utcnow()
+            )
+            db.add(new_customer)
+            db.commit()
+            db.refresh(new_customer)
+            return {
+                "success": True,
+                "action": "created",
+                "customer_name": new_customer.name,
+                "phone_number": new_customer.phone_number,
+                "message": f"Nice to meet you, {new_customer.name}! I've saved your information for next time."
+            }
+            
+    except Exception as e:
+        logger.error(f"Error saving customer name: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to save customer name")
+
 @app.post("/update_customer_name")
 async def update_customer_name_endpoint(
     phone_number: str = Query(..., description="Customer phone number"),
     customer_name: str = Query(..., description="Customer name"),
     db = Depends(get_db)
 ):
-    """Update customer name when collected during conversation"""
+    """Update customer name when collected during conversation (legacy endpoint)"""
     try:
         clean_phone = ''.join(filter(str.isdigit, phone_number))
         customer = db.query(Customer).filter(Customer.phone_number == clean_phone).first()
         
         if customer:
-            customer.name = customer_name
+            customer.name = customer_name.strip()
             customer.updated_at = datetime.utcnow()
             db.commit()
             return {"message": "Customer name updated successfully"}
@@ -441,7 +540,7 @@ async def update_customer_name_endpoint(
             # Create new customer with name
             new_customer = Customer(
                 phone_number=clean_phone,
-                name=customer_name,
+                name=customer_name.strip(),
                 last_call_at=datetime.utcnow()
             )
             db.add(new_customer)
@@ -1027,8 +1126,16 @@ async def place_order(
             payment_status = "cash"
             logger.info("Cash payment selected")
         
-        # Create or update customer
+        # Create or update customer with name from order
         customer = lookup_or_create_customer(db, order_request.customer_phone, order_request.customer_name)
+        
+        # Ensure customer name is saved if provided in order
+        if order_request.customer_name and order_request.customer_name.strip():
+            if not customer.name or customer.name != order_request.customer_name.strip():
+                customer.name = order_request.customer_name.strip()
+                customer.updated_at = datetime.utcnow()
+                db.commit()
+                logger.info(f"Saved customer name '{customer.name}' for phone {customer.phone_number}")
         
         # Store order in database
         from database_models import Order

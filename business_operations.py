@@ -196,7 +196,7 @@ class DynamicVariablesResponse(BaseModel):
 
 # --- HELPER FUNCTIONS ---
 
-async def lookup_or_create_customer(phone_number: str, db: Session) -> Customer:
+def lookup_or_create_customer(db: Session, phone_number: str, customer_name: str = None) -> Customer:
     """Look up existing customer or create new one"""
     # Clean phone number (remove non-digits)
     clean_phone = ''.join(filter(str.isdigit, phone_number))
@@ -205,14 +205,18 @@ async def lookup_or_create_customer(phone_number: str, db: Session) -> Customer:
     customer = db.query(Customer).filter(Customer.phone_number == clean_phone).first()
     
     if customer:
-        # Update last call time
+        # Update last call time and name if provided
         customer.last_call_at = datetime.utcnow()
+        if customer_name and customer_name.strip() and not customer.name:
+            customer.name = customer_name.strip()
+            customer.updated_at = datetime.utcnow()
         db.commit()
         return customer
     else:
         # Create new customer
         new_customer = Customer(
             phone_number=clean_phone,
+            name=customer_name.strip() if customer_name and customer_name.strip() else None,
             last_call_at=datetime.utcnow()
         )
         db.add(new_customer)
