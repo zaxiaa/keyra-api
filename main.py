@@ -27,6 +27,9 @@ from sqlalchemy.orm import Session
 # Import database test function
 from database_models import test_database_connection
 
+# Import POS integrations
+from pos_integrations import pos_manager, initialize_pos_systems, create_pos_order_data, POSSystemType
+
 # Import Pydantic for request/response models
 from pydantic import BaseModel
 
@@ -111,6 +114,7 @@ class PlaceOrderResponse(BaseModel):
     message: str
     error_message: Optional[str] = None
     transaction_id: Optional[str] = None
+    pos_integration: Optional[dict] = None  # POS system integration status
 
 # Create main FastAPI app
 app = FastAPI(
@@ -140,7 +144,7 @@ async def root():
             "recommendations": "Menu recommendations based on preferences",
             "payment_processing": "Credit card processing for delivery orders via USAePay gateway",
             "sms_messaging": "Send text messages to customers via Twilio",
-            "order_management": "Complete order placement with payment processing and storage"
+            "order_management": "Complete order placement with payment processing, storage, and POS integration"
         },
         "docs": "/docs",
         "redoc": "/redoc",
@@ -160,7 +164,9 @@ async def root():
                 "send_text_message": "POST /send-text-message"
             },
             "order_management": {
-                "place_order": "POST /place-order?restaurant_id={1|2}"
+                "place_order": "POST /place-order?restaurant_id={1|2}",
+                "pos_status": "GET /pos-status?restaurant_id={1|2}",
+                "pos_test": "POST /test-pos-connections?restaurant_id={1|2}"
             },
             "database": {
                 "test_connection": "GET /test-db",
@@ -1096,6 +1102,55 @@ async def place_order(
             pickup_time = datetime.now(eastern) + timedelta(minutes=25)
             estimated_pickup_time = pickup_time.strftime("%I:%M %p")
         
+        # Send to POS systems
+        pos_integration_status = {}
+        try:
+            # Create POS order data
+            pos_order_data = create_pos_order_data(
+                order_data_for_db, 
+                restaurant_id, 
+                POSSystemType.SUPERMENU if restaurant_id == "1" else POSSystemType.CHEERSFOOD
+            )
+            pos_order_data.order_id = str(new_order.id)
+            pos_order_data.order_number = order_number
+            
+            # Send to all configured POS systems for this restaurant
+            pos_responses = await pos_manager.send_order_to_all_pos(restaurant_id, pos_order_data)
+            
+            if pos_responses:
+                pos_integration_status = {
+                    "enabled": True,
+                    "systems": [
+                        {
+                            "pos_system": response.pos_system.value,
+                            "success": response.success,
+                            "pos_order_id": response.pos_order_id,
+                            "status": response.status.value,
+                            "message": response.message,
+                            "estimated_ready_time": response.estimated_ready_time
+                        }
+                        for response in pos_responses
+                    ]
+                }
+                
+                # Update estimated pickup time from POS if available
+                successful_pos_responses = [r for r in pos_responses if r.success and r.estimated_ready_time]
+                if successful_pos_responses:
+                    estimated_pickup_time = successful_pos_responses[0].estimated_ready_time
+            else:
+                pos_integration_status = {
+                    "enabled": False,
+                    "message": "No POS systems configured for this restaurant"
+                }
+                
+        except Exception as pos_error:
+            logger.error(f"POS integration error: {str(pos_error)}")
+            pos_integration_status = {
+                "enabled": True,
+                "error": str(pos_error),
+                "message": "Order placed successfully but POS integration failed"
+            }
+        
         logger.info(f"Order placed successfully: {order_number} for ${total_amount:.2f}")
         
         return PlaceOrderResponse(
@@ -1106,7 +1161,8 @@ async def place_order(
             payment_status=payment_status,
             estimated_pickup_time=estimated_pickup_time,
             message=f"Order {order_number} placed successfully! {f'Estimated pickup time: {estimated_pickup_time}' if order_request.order_type.lower() in ['pickup', 'pick_up', 'pick-up'] else ''}",
-            transaction_id=transaction_id
+            transaction_id=transaction_id,
+            pos_integration=pos_integration_status
         )
         
     except HTTPException:
@@ -1220,6 +1276,84 @@ async def process_credit_card_payment(card_request: CreditCardRequest) -> Credit
             total_amount=card_request.base_charge_amount + card_request.tip_amount,
             error_message=f"Unexpected error during payment processing: {str(e)}"
         )
+
+# POS Integration Status Endpoints
+@app.get("/pos-status")
+async def get_pos_status(restaurant_id: str = Query(..., description="Restaurant ID")):
+    """Get POS integration status for a restaurant"""
+    try:
+        integrations = pos_manager.get_all_pos_integrations(restaurant_id)
+        
+        if not integrations:
+            return {
+                "restaurant_id": restaurant_id,
+                "pos_systems": [],
+                "message": "No POS systems configured for this restaurant"
+            }
+        
+        status_info = []
+        for integration in integrations:
+            is_configured = integration._is_configured() if hasattr(integration, '_is_configured') else True
+            status_info.append({
+                "pos_system": integration.pos_type.value,
+                "configured": is_configured,
+                "config_keys": list(integration.config.keys()),
+                "has_credentials": bool(integration.config.get('api_key'))
+            })
+        
+        return {
+            "restaurant_id": restaurant_id,
+            "pos_systems": status_info,
+            "total_systems": len(status_info)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting POS status: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get POS status: {str(e)}")
+
+@app.post("/test-pos-connections")
+async def test_pos_connections(restaurant_id: str = Query(..., description="Restaurant ID")):
+    """Test connections to all POS systems for a restaurant"""
+    try:
+        connection_results = await pos_manager.test_all_connections(restaurant_id)
+        
+        if not connection_results:
+            return {
+                "restaurant_id": restaurant_id,
+                "message": "No POS systems configured for this restaurant",
+                "results": {}
+            }
+        
+        results = {
+            pos_type.value: {
+                "connected": success,
+                "status": "connected" if success else "failed"
+            }
+            for pos_type, success in connection_results.items()
+        }
+        
+        overall_status = "all_connected" if all(connection_results.values()) else "some_failed"
+        
+        return {
+            "restaurant_id": restaurant_id,
+            "overall_status": overall_status,
+            "results": results,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error testing POS connections: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to test POS connections: {str(e)}")
+
+# Initialize POS systems on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize POS integrations on application startup"""
+    try:
+        initialize_pos_systems()
+        logger.info("Application startup completed with POS integrations")
+    except Exception as e:
+        logger.error(f"Error during startup: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
