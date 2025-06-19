@@ -33,6 +33,7 @@ class Restaurant(Base):
     doordash_link = Column(String(500), nullable=True)
     reservation_link = Column(String(500), nullable=True)
     timezone = Column(String(50), default="America/New_York")
+    tax_rate = Column(Float, default=0.06)  # Default 6% tax rate
     
     # Business hours stored as JSON
     business_hours = Column(JSON, nullable=False)  # Store the complex schedule

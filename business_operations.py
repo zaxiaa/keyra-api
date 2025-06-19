@@ -3,6 +3,7 @@ import logging
 from fastapi import FastAPI, HTTPException, Query, Depends
 from pydantic import BaseModel, field_validator
 from typing import Optional, List, Dict, Any
+from database_models import Restaurant
 from datetime import datetime, time
 import pytz
 from pathlib import Path
@@ -77,13 +78,27 @@ DATA_DIR.mkdir(exist_ok=True)
 DEFAULT_TAX_RATE = 0.06
 
 def get_restaurant_tax_rate(restaurant_id: str) -> float:
-    """Get the tax rate for a specific restaurant"""
+    """Get the tax rate for a specific restaurant from database"""
     try:
-        store_hours = load_store_hours(restaurant_id)
-        return store_hours.tax_rate
-    except Exception as e:
-        logger.warning(f"Could not load tax rate for restaurant {restaurant_id}, using default: {str(e)}")
+        # First try to get from database
+        db = next(get_db())
+        restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+        if restaurant and restaurant.tax_rate:
+            return restaurant.tax_rate
+            
+        # Fallback to default if restaurant not found
+        logger.warning(f"Restaurant {restaurant_id} not found in database, using default tax rate")
         return DEFAULT_TAX_RATE
+        
+    except Exception as e:
+        logger.warning(f"Could not load tax rate for restaurant {restaurant_id} from database: {str(e)}")
+        # Fallback to file-based system for backward compatibility
+        try:
+            store_hours = load_store_hours(restaurant_id)
+            return store_hours.tax_rate
+        except Exception as e2:
+            logger.warning(f"Could not load tax rate from files either: {str(e2)}")
+            return DEFAULT_TAX_RATE
 
 # --- PYDANTIC MODELS ---
 
@@ -123,15 +138,17 @@ class OrderItem(BaseModel):
 
 class OrderRequest(BaseModel):
     delivery_fee: float
-    customer_address: Optional[str] = None
-    execution_message: Optional[str] = None
     order_notes: str
     customer_phone: str
     tip_amount: float
     customer_name: str
-    pick_up_time: Optional[str] = None
     order_type: str
     order_items: List[OrderItem]
+    
+    # Optional fields that should have defaults
+    customer_address: Optional[str] = ""
+    execution_message: Optional[str] = ""
+    pick_up_time: Optional[str] = ""
     
     @field_validator('order_type')
     @classmethod
