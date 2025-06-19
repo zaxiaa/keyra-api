@@ -5,6 +5,9 @@ Main FastAPI application that combines business operations and recommendation se
 
 from fastapi import FastAPI, Query, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.openapi.utils import get_openapi
+from fastapi.responses import HTMLResponse
 from typing import Optional
 import logging
 import os
@@ -121,7 +124,7 @@ app = FastAPI(
     title="Keyra Restaurant API",
     description="Combined API for restaurant business operations and recommendations with customer memory",
     version="2.0.0",
-    docs_url="/docs",
+    docs_url=None,  # Disable default docs
     redoc_url="/redoc",
 )
 
@@ -134,11 +137,50 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/docs", response_class=HTMLResponse, include_in_schema=False)
+async def custom_swagger_ui_html():
+    """Custom Swagger UI with Try it out functionality disabled"""
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=f"{app.title} - Documentation",
+        swagger_js_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js",
+        swagger_css_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css",
+        swagger_ui_parameters={
+            "tryItOutEnabled": False,  # Disable Try it out functionality
+            "supportedSubmitMethods": [],  # Disable all submit methods
+            "displayRequestDuration": True,
+            "docExpansion": "list",
+            "filter": True,
+            "showExtensions": True,
+            "showCommonExtensions": True,
+        }
+    )
+
+@app.get("/openapi.json", include_in_schema=False)
+async def custom_openapi():
+    """Custom OpenAPI schema"""
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    
+    # Add security notice to the description
+    openapi_schema["info"]["description"] += "\n\n⚠️ **IMPORTANT**: This is a production API. The 'Try it out' functionality has been disabled to prevent accidental execution. Please use your own testing tools or development environment for API testing."
+    
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
 @app.get("/")
 async def root():
     """Main API root endpoint"""
     return {
         "message": "Keyra Restaurant API with Customer Memory",
+        "⚠️ PRODUCTION API": "This is a live production API. Documentation is read-only. Use testing tools for API calls.",
         "services": {
             "business_operations": "Business hours, lunch hours, order totals, store configuration with customer lookup",
             "recommendations": "Menu recommendations based on preferences",
@@ -146,7 +188,7 @@ async def root():
             "sms_messaging": "Send text messages to customers via Twilio",
             "order_management": "Complete order placement with payment processing, storage, and POS integration"
         },
-        "docs": "/docs",
+        "docs": "/docs (read-only, execution disabled)",
         "redoc": "/redoc",
         "available_endpoints": {
             "business_hours": "POST /is_in_business_hour?restaurant_id={1|2}&phone_number=optional",
