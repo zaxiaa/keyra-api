@@ -479,7 +479,7 @@ async def lookup_customer_by_phone(
         
         if customer and customer.name:
             # Update last call time
-            customer.last_call_at = datetime.utcnow()
+            customer.last_call_at = datetime.now(datetime.UTC)
             db.commit()
             
             return {
@@ -493,7 +493,7 @@ async def lookup_customer_by_phone(
             }
         elif customer:
             # Customer exists but no name stored
-            customer.last_call_at = datetime.utcnow()
+            customer.last_call_at = datetime.now(datetime.UTC)
             db.commit()
             return {
                 "customer_found": True,
@@ -532,8 +532,8 @@ async def save_customer_name(
         if customer:
             # Update existing customer
             customer.name = customer_name.strip()
-            customer.updated_at = datetime.utcnow()
-            customer.last_call_at = datetime.utcnow()
+            customer.updated_at = datetime.now(datetime.UTC)
+            customer.last_call_at = datetime.now(datetime.UTC)
             db.commit()
             return {
                 "success": True,
@@ -547,7 +547,7 @@ async def save_customer_name(
             new_customer = Customer(
                 phone_number=clean_phone,
                 name=customer_name.strip(),
-                last_call_at=datetime.utcnow()
+                last_call_at=datetime.now(datetime.UTC)
             )
             db.add(new_customer)
             db.commit()
@@ -577,7 +577,7 @@ async def update_customer_name_endpoint(
         
         if customer:
             customer.name = customer_name.strip()
-            customer.updated_at = datetime.utcnow()
+            customer.updated_at = datetime.now(datetime.UTC)
             db.commit()
             return {"message": "Customer name updated successfully"}
         else:
@@ -585,7 +585,7 @@ async def update_customer_name_endpoint(
             new_customer = Customer(
                 phone_number=clean_phone,
                 name=customer_name.strip(),
-                last_call_at=datetime.utcnow()
+                last_call_at=datetime.now(datetime.UTC)
             )
             db.add(new_customer)
             db.commit()
@@ -1179,7 +1179,7 @@ async def place_order(
         if order_request.customer_name and order_request.customer_name.strip():
             if not customer.name or customer.name != order_request.customer_name.strip():
                 customer.name = order_request.customer_name.strip()
-                customer.updated_at = datetime.utcnow()
+                customer.updated_at = datetime.now(datetime.UTC)
                 db.commit()
                 logger.info(f"Saved customer name '{customer.name}' for phone {customer.phone_number}")
         
