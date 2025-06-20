@@ -118,6 +118,7 @@ class PlaceOrderResponse(BaseModel):
     error_message: Optional[str] = None
     transaction_id: Optional[str] = None
     pos_integration: Optional[dict] = None  # POS system integration status
+    sms_confirmation: Optional[dict] = None  # SMS confirmation status
 
 # Create main FastAPI app
 app = FastAPI(
@@ -186,7 +187,7 @@ async def root():
             "recommendations": "Menu recommendations based on preferences",
             "payment_processing": "Credit card processing for delivery orders via USAePay gateway",
             "sms_messaging": "Send text messages to customers via Twilio",
-            "order_management": "Complete order placement with payment processing, storage, and POS integration"
+            "order_management": "Complete order placement with payment processing, storage, POS integration, and SMS confirmations"
         },
         "docs": "/docs (read-only, execution disabled)",
         "redoc": "/redoc",
@@ -222,7 +223,8 @@ async def root():
             "customer_memory": "Agents can now remember customer names across calls",
             "enhanced_business_hours": "Returns all dynamic variables needed by Retell AI",
             "phone_lookup": "Customer lookup by phone number in business hours check",
-            "postgresql_support": "Production-ready PostgreSQL database integration"
+            "postgresql_support": "Production-ready PostgreSQL database integration",
+            "sms_order_confirmations": "Automatic SMS confirmations sent to customers after placing orders"
         },
         "examples": {
             "restaurant_1": {
@@ -1009,10 +1011,12 @@ async def place_order(
     3. Processing payment (if credit card payment)
     4. Storing the order in the database
     5. Creating or updating customer information
-    6. Returning order confirmation details
+    6. Sending SMS confirmation to customer with order details
+    7. Returning order confirmation details
     
     Supports both cash and credit card payments.
     For credit card payments, requires USAePay environment variables.
+    For SMS notifications, requires Twilio environment variables.
     """
     try:
         # Get raw request body and parse
@@ -1302,6 +1306,18 @@ async def place_order(
         
         logger.info(f"Order placed successfully: {order_number} for ${total_amount:.2f}")
         
+        # Send SMS confirmation to customer
+        sms_status = await send_order_confirmation_sms(
+            customer_phone=order_request.customer_phone,
+            customer_name=order_request.customer_name,
+            order_number=order_number,
+            order_items=order_request.order_items,
+            total_amount=total_amount,
+            estimated_pickup_time=estimated_pickup_time,
+            order_type=order_request.order_type,
+            restaurant_id=restaurant_id
+        )
+        
         return PlaceOrderResponse(
             success=True,
             order_id=str(new_order.id),
@@ -1311,7 +1327,8 @@ async def place_order(
             estimated_pickup_time=estimated_pickup_time,
             message=f"Order {order_number} placed successfully! {f'Estimated pickup time: {estimated_pickup_time}' if order_request.order_type.lower() in ['pickup', 'pick_up', 'pick-up'] else ''}",
             transaction_id=transaction_id,
-            pos_integration=pos_integration_status
+            pos_integration=pos_integration_status,
+            sms_confirmation=sms_status
         )
         
     except HTTPException:
@@ -1324,6 +1341,121 @@ async def place_order(
             status_code=500, 
             detail=f"Unexpected error placing order: {str(e)}"
         )
+
+# Helper function to send order confirmation SMS
+async def send_order_confirmation_sms(
+    customer_phone: str,
+    customer_name: str,
+    order_number: str,
+    order_items: list,
+    total_amount: float,
+    estimated_pickup_time: str,
+    order_type: str,
+    restaurant_id: str
+):
+    """
+    Send SMS confirmation to customer with order details.
+    
+    This function will:
+    1. Format order details into a readable SMS message
+    2. Include customer name, order number, items, total, and pickup time
+    3. Send the SMS using existing Twilio functionality
+    4. Log success/failure but not interrupt the order flow
+    5. Return status information for the API response
+    """
+    try:
+        # Get Twilio configuration from environment variables
+        account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+        auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+        twilio_phone = os.getenv("TWILIO_PHONE_NUMBER")
+        
+        if not account_sid or not auth_token or not twilio_phone:
+            logger.warning("SMS confirmation not sent - Twilio configuration missing")
+            return {
+                "enabled": False,
+                "sent": False,
+                "message": "SMS service not configured - missing environment variables",
+                "phone_number": customer_phone
+            }
+        
+        # Get restaurant name for the message
+        restaurant_name = "Restaurant" if restaurant_id == "1" else "Restaurant 2"
+        if restaurant_id == "1":
+            restaurant_name = "Keyra Sushi"  # You can customize this
+        elif restaurant_id == "2":
+            restaurant_name = "Keyra Asian Cuisine"  # You can customize this
+        
+        # Format order items for SMS
+        items_text = []
+        for item in order_items:
+            item_line = f"• {item.item_quantity}x {item.item_name}"
+            if item.special_instructions and item.special_instructions.strip():
+                item_line += f" ({item.special_instructions})"
+            items_text.append(item_line)
+        
+        # Create SMS message
+        pickup_delivery_text = "pickup" if order_type.lower() in ['pickup', 'pick_up', 'pick-up'] else "delivery"
+        
+        sms_message = f"""Hi {customer_name}! Your order has been confirmed at {restaurant_name}.
+
+Order #{order_number}
+{chr(10).join(items_text)}
+
+Total: ${total_amount:.2f}
+{pickup_delivery_text.title()} time: {estimated_pickup_time}
+
+Thank you for your order! We'll have it ready for you soon."""
+
+        # Initialize Twilio client and send SMS
+        try:
+            from twilio.rest import Client
+            client = Client(account_sid, auth_token)
+            
+            message = client.messages.create(
+                body=sms_message,
+                from_=twilio_phone,
+                to=customer_phone
+            )
+            
+            logger.info(f"Order confirmation SMS sent successfully to {customer_phone}. Message SID: {message.sid}")
+            
+            return {
+                "enabled": True,
+                "sent": True,
+                "message_sid": message.sid,
+                "status": message.status,
+                "phone_number": customer_phone,
+                "message": "Order confirmation SMS sent successfully"
+            }
+            
+        except ImportError:
+            logger.warning("Twilio library not available - SMS confirmation not sent")
+            return {
+                "enabled": False,
+                "sent": False,
+                "message": "Twilio library not available",
+                "phone_number": customer_phone
+            }
+        except Exception as sms_error:
+            logger.error(f"Failed to send order confirmation SMS to {customer_phone}: {str(sms_error)}")
+            return {
+                "enabled": True,
+                "sent": False,
+                "error": str(sms_error),
+                "phone_number": customer_phone,
+                "message": "Failed to send SMS confirmation"
+            }
+            
+    except Exception as e:
+        logger.error(f"Unexpected error in order confirmation SMS: {str(e)}")
+        # Don't let SMS errors interrupt the order process
+        return {
+            "enabled": True,
+            "sent": False,
+            "error": str(e),
+            "phone_number": customer_phone,
+            "message": "Unexpected error sending SMS confirmation"
+        }
 
 # Helper function for credit card processing (extracted from existing endpoint)
 async def process_credit_card_payment(card_request: CreditCardRequest) -> CreditCardResponse:
